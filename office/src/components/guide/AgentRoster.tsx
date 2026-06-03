@@ -1,22 +1,9 @@
-import { AGENT_CONFIG, AGENT_SCREEN_COLORS } from '@/lib/colors';
+import { AGENT_CONFIG, AGENT_GROUPS, AGENT_SCREEN_COLORS } from '@/lib/colors';
 
 /**
  * 21인 에이전트 로스터 — 매뉴얼 2종이 공유.
- * 이름/역할/모델은 AGENT_CONFIG, 고유 색은 AGENT_SCREEN_COLORS 를 단일 출처로 사용한다.
- * README 의 4개 부서 그룹핑을 그대로 따른다.
+ * 이름/역할/모델은 AGENT_CONFIG, 고유 색은 AGENT_SCREEN_COLORS, 그룹핑은 AGENT_GROUPS 를 단일 출처로 사용한다.
  */
-
-interface RosterGroup {
-  readonly label: string;
-  readonly ids: readonly string[];
-}
-
-const ROSTER_GROUPS: readonly RosterGroup[] = [
-  { label: '리더십 · 심의', ids: ['simon', 'sam', 'able', 'klay', 'ryan', 'critic', 'noah'] },
-  { label: '백엔드 · 인프라', ids: ['jay', 'jerry', 'milla', 'jun', 'kain'] },
-  { label: '프론트엔드 · 디자인', ids: ['willji', 'derek', 'rowan', 'figma-reader'] },
-  { label: 'AI/ML · 특수', ids: ['jo', 'hugg', 'iron', 'teacher', 'progress-checker'] },
-];
 
 /** id → AGENT_CONFIG 엔트리 조회 맵. 키를 string 으로 넓혀 일반 조회를 허용한다. */
 const AGENT_BY_ID = new Map<string, (typeof AGENT_CONFIG)[number]>(
@@ -26,7 +13,7 @@ const AGENT_BY_ID = new Map<string, (typeof AGENT_CONFIG)[number]>(
 export function AgentRoster() {
   return (
     <div className="flex flex-col gap-7">
-      {ROSTER_GROUPS.map((group) => (
+      {AGENT_GROUPS.map((group) => (
         <div key={group.label}>
           <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.15em] text-office-dim">
             {group.label}

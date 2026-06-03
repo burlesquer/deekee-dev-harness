@@ -146,7 +146,8 @@ export function CharacterBillboard({
   // SVG 텍스처 로드
   useEffect(() => {
     let cancelled = false;
-    loadAgentTexture(agentId)
+    // SVG 자산이 없으면 로더가 screenColor 기반 폴백 텍스처를 반환한다(흰 네모 방지).
+    loadAgentTexture(agentId, screenColor)
       .then((t) => {
         if (!cancelled) {
           setTexture(t);
@@ -157,12 +158,12 @@ export function CharacterBillboard({
         }
       })
       .catch(() => {
-        // 로드 실패 시 무시 (텍스처 없이 투명 표시)
+        // 폴백까지 실패하는 경우는 없지만 방어적으로 무시한다.
       });
     return () => {
       cancelled = true;
     };
-  }, [agentId]);
+  }, [agentId, screenColor]);
 
   // 애니메이션 프레임 — 자율 산책 시스템
   const prevTimeRef = useRef(0);

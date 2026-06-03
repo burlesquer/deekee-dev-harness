@@ -4,7 +4,10 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { InviteCodeInput } from './InviteCodeInput';
 import { RoomSection } from './RoomSection';
-import { AGENT_CONFIG, AGENT_SCREEN_COLORS } from '@/lib/colors';
+import { AGENT_CONFIG, AGENT_GROUPS, AGENT_SCREEN_COLORS } from '@/lib/colors';
+
+/** id → 표시 이름 조회 맵 (그룹 렌더 시 이름 해석용). */
+const AGENT_NAME_BY_ID = new Map<string, string>(AGENT_CONFIG.map((a) => [a.id, a.name]));
 
 export interface LandingPageProps {
   readonly initialCode?: string | null;
@@ -82,13 +85,20 @@ export function LandingPage({ initialCode }: Readonly<LandingPageProps>) {
           ))}
         </div>
 
-        {/* === Agent Avatars (21명) === */}
-        <div className="mb-10 w-full">
-          <div className="flex flex-wrap justify-center gap-3">
-            {AGENT_CONFIG.map((agent) => (
-              <AgentAvatar key={agent.id} id={agent.id} name={agent.name} />
-            ))}
-          </div>
+        {/* === Agent Avatars (21명, 부서별 구분) === */}
+        <div className="mb-10 flex w-full flex-col gap-6">
+          {AGENT_GROUPS.map((group) => (
+            <div key={group.label}>
+              <div className="mb-2.5 text-center text-[11px] uppercase tracking-[0.15em] text-office-dim">
+                {group.label}
+              </div>
+              <div className="flex flex-wrap justify-center gap-3">
+                {group.ids.map((id) => (
+                  <AgentAvatar key={id} id={id} name={AGENT_NAME_BY_ID.get(id) ?? id} />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* === Entry card (룸/초대) === */}

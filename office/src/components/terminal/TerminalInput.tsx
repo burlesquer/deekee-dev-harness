@@ -61,7 +61,7 @@ export function TerminalInput({ agentId, sessionId, disabled = false }: Readonly
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
         disabled={disabled || sending}
-        placeholder={disabled ? 'Remote Control 연결 대기 중...' : '명령 입력...'}
+        placeholder={disabled ? '관전 모드 — 원격 제어가 연결되면 입력할 수 있어요' : '명령 입력...'}
         style={{
           flex: 1,
           background: 'transparent',

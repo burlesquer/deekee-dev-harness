@@ -83,3 +83,11 @@ export const AGENT_CONFIG = [
   { id: 'figma-reader', name: 'Figma', role: 'Figma',  dept: '디자인', model: 'sonnet' },
   { id: 'progress-checker', name: 'Progress', role: '진행검증', dept: '특수', model: 'sonnet' },
 ] as const;
+
+// 에이전트 부서 그룹핑 (README 4개 그룹) — 랜딩 아바타·매뉴얼 로스터가 공유하는 단일 출처
+export const AGENT_GROUPS = [
+  { label: '리더십 · 심의', ids: ['simon', 'sam', 'able', 'klay', 'ryan', 'critic', 'noah'] },
+  { label: '백엔드 · 인프라', ids: ['jay', 'jerry', 'milla', 'jun', 'kain'] },
+  { label: '프론트엔드 · 디자인', ids: ['willji', 'derek', 'rowan', 'figma-reader'] },
+  { label: 'AI/ML · 특수', ids: ['jo', 'hugg', 'iron', 'teacher', 'progress-checker'] },
+] as const;
