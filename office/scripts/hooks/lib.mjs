@@ -57,7 +57,7 @@ export function readStdin() {
 
 /**
  * 환경변수에서 서버 설정을 읽어 반환합니다.
- * @returns {{ serverUrl: string, teamId: string, agentName: string, agentRole: string, relaySecret: string | undefined }}
+ * @returns {{ serverUrl: string, teamId: string, agentName: string, agentRole: string, relaySecret: string | undefined, roomCode: string | undefined }}
  */
 export function getConfig() {
   return {
@@ -66,6 +66,8 @@ export function getConfig() {
     agentName: process.env.DK_AGENT_NAME || process.env.USER || 'unknown',
     agentRole: process.env.DK_AGENT_ROLE || 'developer',
     relaySecret: process.env.RELAY_SECRET || undefined,
+    // 룸 코드(예: DK-1A2B). 있으면 register 가 이 세션을 룸 멤버로 합류시킨다.
+    roomCode: process.env.DK_ROOM_CODE || undefined,
   };
 }
 

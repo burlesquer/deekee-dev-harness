@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getClientId } from '@/lib/client-id';
 
 export interface CreateRoomModalProps {
   readonly onClose: () => void;
@@ -10,7 +9,6 @@ export interface CreateRoomModalProps {
 
 interface CreateRoomPayload {
   name: string;
-  ownerId: string;
   isPublic: boolean;
   maxMembers: number;
   allowSpectators: boolean;
@@ -58,9 +56,9 @@ export function CreateRoomModal({ onClose, onCreated }: Readonly<CreateRoomModal
     setIsSubmitting(true);
     setError(null);
 
+    // ownerId 는 보내지 않는다 — 서버가 서명된 신원 쿠키에서 도출한다(클라 위조 무시).
     const payload: CreateRoomPayload = {
       name: trimmedName,
-      ownerId: getClientId(),
       isPublic,
       maxMembers,
       allowSpectators,

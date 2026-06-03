@@ -45,11 +45,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'payload exceeds 8192 characters' }, { status: 400 });
     }
 
+    // 이벤트에 룸 도장을 찍는다: 훅은 roomId 를 모르므로(코드만 env 로 받음) 서버가
+    // sessionId → 등록 세션 → roomId 로 도출한다. 룸에 안 묶인 세션은 undefined(전역).
+    const roomId = sessionRegistry.get(body.sessionId)?.roomId;
+
     const event: AgentEvent = {
       teamId: body.teamId,
       sessionId: body.sessionId,
       userId: body.userId ?? 'unknown',
       agentName: body.agentName ?? 'unknown',
+      roomId,
       eventType: body.eventType,
       toolName: body.toolName,
       timestamp: body.timestamp ?? Date.now(),

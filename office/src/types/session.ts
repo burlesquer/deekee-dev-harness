@@ -10,6 +10,8 @@ export interface RegisteredSession {
   agentRole: string;
   agentName: string;
   teamId?: string;
+  /** 이 세션이 합류한 룸 id. register 시 roomCode 로 해석돼 채워진다(없으면 전역 세션). */
+  roomId?: string;
   status: 'active' | 'idle' | 'waiting' | 'completed';
   currentTool?: string;
   sessionTitle?: string;

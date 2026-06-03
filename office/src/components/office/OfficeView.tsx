@@ -98,8 +98,11 @@ export function OfficeView({ roomId, projectName, initialAgents, initialPipeline
 
   const handleEvent = useCallback(
     (event: AgentEvent) => {
-      // Filter events by roomId when in room mode
-      if (roomId && event.roomId && event.roomId !== roomId) return;
+      // 룸 모드에서는 그 룸 도장이 찍힌 이벤트만 통과시킨다(엄격 일치).
+      // roomId 가 없는 전역 세션(룸 미소속)도 룸 화면에 누출되지 않도록 떨어뜨린다.
+      // 서버 SSE 필터는 connect 시점 멤버 스냅샷이라 늦게 합류한 세션을 놓치므로,
+      // 동적인 이 클라이언트 필터(이벤트 roomId 도장 기반)가 격리의 주 경로다.
+      if (roomId && event.roomId !== roomId) return;
 
       if (event.eventType === 'approval_request') {
         const approval = event.payload?.approval as ApprovalRequest | undefined;

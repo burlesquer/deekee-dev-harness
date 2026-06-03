@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sessionRegistry } from '@/lib/relay/session-registry';
 import { eventBroadcaster } from '@/lib/relay/event-broadcaster';
+import { roomRegistry } from '@/lib/relay/room-registry';
 import { validateRelaySecret } from '@/lib/relay/auth';
 import type { RegisteredSession, AgentEvent } from '@/types/session';
 
@@ -10,7 +11,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const body = (await req.json()) as Partial<RegisteredSession>;
+    const body = (await req.json()) as Partial<RegisteredSession> & { roomCode?: string };
 
     if (!body.sessionId || !body.userId || !body.agentRole || !body.agentName) {
       return NextResponse.json(
@@ -38,6 +39,25 @@ export async function POST(req: NextRequest) {
       lastEventAt: body.lastEventAt ?? Date.now(),
     };
 
+    // 룸 코드가 오면 해당 룸의 멤버로 합류시킨다. 이게 "PC 세션 ↔ 룸"의 다리:
+    // session.roomId 가 채워지면 이후 이벤트가 룸 도장을 받고, SSE/UI 가 룸 단위로 분리한다.
+    // 코드가 없거나 룸이 없으면 전역 세션으로 등록(기존 동작 유지).
+    if (body.roomCode) {
+      const room = await roomRegistry.getByCode(body.roomCode.toUpperCase());
+      if (room) {
+        // 합류가 성공한 경우에만 roomId 를 바인딩한다(만석이면 joinById 가 null →
+        // 도장만 찍히고 실제 멤버가 아닌 불일치를 막는다).
+        const joined = await roomRegistry.joinById(room.id, {
+          sessionId: session.sessionId,
+          userId: session.userId,
+          agentName: session.agentName,
+          agentRole: session.agentRole,
+          joinedAt: Date.now(),
+        });
+        if (joined) session.roomId = room.id;
+      }
+    }
+
     sessionRegistry.register(session);
 
     const event: AgentEvent = {
@@ -45,6 +65,7 @@ export async function POST(req: NextRequest) {
       sessionId: session.sessionId,
       userId: session.userId,
       agentName: session.agentName,
+      roomId: session.roomId,
       eventType: 'register',
       timestamp: Date.now(),
       payload: { session },

@@ -85,26 +85,22 @@ describe('ChatRegistry', () => {
 
   describe('getRecent', () => {
     it('returns messages after the given since timestamp', () => {
-      const before = Date.now() - 1000;
+      // 단조 타임스탬프 보장으로 old < new. new 의 경계 타임스탬프를 커서로 쓰면
+      // 같은 ms 에 들어와도 결정론적으로 new 만 남는다(이전엔 same-ms 플래키).
       registry.addMessage({ sessionId: 's', userId: 'u', agentName: 'A', text: 'old' });
-      const after = Date.now();
-      registry.addMessage({ sessionId: 's', userId: 'u', agentName: 'A', text: 'new' });
-      const msgs = registry.getRecent(undefined, after);
+      const newMsg = registry.addMessage({ sessionId: 's', userId: 'u', agentName: 'A', text: 'new' });
+      const msgs = registry.getRecent(undefined, newMsg.timestamp);
       expect(msgs.length).toBe(1);
       expect(msgs[0].text).toBe('new');
-      void before;
     });
 
     it('filters by roomId and since', () => {
-      const t = Date.now();
       registry.addMessage({ roomId: 'r1', sessionId: 's', userId: 'u', agentName: 'A', text: 'r1-old' });
-      const t2 = Date.now();
-      registry.addMessage({ roomId: 'r1', sessionId: 's', userId: 'u', agentName: 'A', text: 'r1-new' });
+      const r1New = registry.addMessage({ roomId: 'r1', sessionId: 's', userId: 'u', agentName: 'A', text: 'r1-new' });
       registry.addMessage({ roomId: 'r2', sessionId: 's', userId: 'u', agentName: 'A', text: 'r2-new' });
-      const msgs = registry.getRecent('r1', t2);
+      const msgs = registry.getRecent('r1', r1New.timestamp);
       expect(msgs.length).toBe(1);
       expect(msgs[0].text).toBe('r1-new');
-      void t;
     });
   });
 

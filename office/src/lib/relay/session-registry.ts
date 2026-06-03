@@ -31,6 +31,10 @@ class SessionRegistry {
     return Array.from(this.sessions.values());
   }
 
+  get(sessionId: string): RegisteredSession | undefined {
+    return this.sessions.get(sessionId);
+  }
+
   getByTeam(teamId: string): RegisteredSession[] {
     return this.getAll().filter((s) => s.teamId === teamId);
   }

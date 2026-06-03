@@ -58,6 +58,7 @@ export function AgentSidePanel({ roomId }: Readonly<AgentSidePanelProps>) {
   const router = useRouter();
   const [roomInfo, setRoomInfo] = useState<RoomInfo | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedSnippet, setCopiedSnippet] = useState(false);
 
   const sessionList = Array.from(sessions.values());
 
@@ -70,10 +71,24 @@ export function AgentSidePanel({ roomId }: Readonly<AgentSidePanelProps>) {
     fetch(`/api/rooms/${encodeURIComponent(roomId)}`)
       .then((res) => {
         if (!res.ok) return null;
-        return res.json() as Promise<RoomInfo>;
+        // GET 은 { room: Room, members } 형태로 감싸 반환한다. 평면 RoomInfo 로 매핑한다.
+        return res.json() as Promise<{ room?: {
+          id: string; name: string; code: string;
+          settings: { isPublic: boolean; maxMembers: number };
+          members: unknown[];
+        } }>;
       })
       .then((data) => {
-        if (!cancelled && data) setRoomInfo(data);
+        if (cancelled || !data?.room) return;
+        const r = data.room;
+        setRoomInfo({
+          id: r.id,
+          name: r.name,
+          code: r.code,
+          isPublic: r.settings.isPublic,
+          memberCount: r.members.length,
+          maxMembers: r.settings.maxMembers,
+        });
       })
       .catch(() => {});
     return () => {
@@ -87,6 +102,18 @@ export function AgentSidePanel({ roomId }: Readonly<AgentSidePanelProps>) {
       await navigator.clipboard.writeText(roomInfo.code);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    } catch {}
+  }, [roomInfo]);
+
+  const handleCopySnippet = useCallback(async () => {
+    if (!roomInfo) return;
+    // 훅이 DK_ROOM_CODE env 만 읽으므로, 이 명령으로 PC 세션을 이 룸에 합류시킨다.
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const snippet = `DK_OFFICE_URL=${origin} DK_ROOM_CODE=${roomInfo.code} claude`;
+    try {
+      await navigator.clipboard.writeText(snippet);
+      setCopiedSnippet(true);
+      setTimeout(() => setCopiedSnippet(false), 2000);
     } catch {}
   }, [roomInfo]);
 
@@ -130,6 +157,26 @@ export function AgentSidePanel({ roomId }: Readonly<AgentSidePanelProps>) {
                   </span>
                 </div>
               )}
+              {/* 이 룸 참여 스니펫: PC 훅이 DK_ROOM_CODE 만 읽으면 세션이 이 룸에 합류한다. */}
+              {roomInfo && (
+                <div className="mb-2 border border-dk-harness-orange/15 bg-white p-1.5">
+                  <div className="mb-1 font-mono text-[8px] uppercase tracking-wider text-dk-harness-muted">
+                    이 룸에서 내 PC 세션 띄우기
+                  </div>
+                  <code className="mb-1 block overflow-hidden text-ellipsis whitespace-nowrap font-mono text-[9px] text-dk-harness-dark">
+                    DK_ROOM_CODE={roomInfo.code} claude
+                  </code>
+                  <button
+                    onClick={handleCopySnippet}
+                    aria-label="룸 참여 명령 복사"
+                    className="w-full cursor-pointer border border-dk-harness-orange/20 bg-transparent py-0.5 font-mono text-[9px] tracking-wider text-dk-harness-muted transition-colors hover:border-dk-harness-orange hover:text-dk-harness-orange"
+                    style={copiedSnippet ? { borderColor: '#22c55e', color: '#22c55e', background: '#f0fdf4' } : undefined}
+                  >
+                    {copiedSnippet ? '[복사됨]' : '명령 복사'}
+                  </button>
+                </div>
+              )}
+
               <div className="flex gap-1.5">
                 <button
                   onClick={handleCopyCode}

@@ -14,7 +14,7 @@
 import { readStdin, getConfig, sendEvent, debugLog } from './lib.mjs';
 
 const config = getConfig();
-const { serverUrl: RELAY_URL, teamId: TEAM_ID, agentName: AGENT_NAME, agentRole: AGENT_ROLE, relaySecret } = config;
+const { serverUrl: RELAY_URL, teamId: TEAM_ID, agentName: AGENT_NAME, agentRole: AGENT_ROLE, relaySecret, roomCode: ROOM_CODE } = config;
 
 async function register() {
   try {
@@ -42,6 +42,8 @@ async function register() {
       status: 'active',
       registeredAt: Date.now(),
       lastEventAt: Date.now(),
+      // 룸 코드가 있으면 서버가 이 세션을 룸 멤버로 합류시킨다(룸 ↔ PC 세션 바인딩).
+      ...(ROOM_CODE ? { roomCode: ROOM_CODE } : {}),
       sharing: {
         enabled: true,
         allowRemoteControl: rcEnabled,
@@ -62,7 +64,17 @@ async function register() {
     }
 
     // Step 4: 상태 정보 출력
-    const sessionUrl = `${RELAY_URL}?session=${sessionId}`;
+    // 서버가 roomCode 를 해석해 session.roomId 를 채웠으면 룸 화면(?room=)으로, 아니면 세션 화면으로.
+    let roomId;
+    try {
+      const data = await res.json();
+      roomId = data?.session?.roomId;
+    } catch {
+      // 응답 파싱 실패 시 세션 URL 로 폴백
+    }
+    const sessionUrl = roomId
+      ? `${RELAY_URL}?room=${roomId}`
+      : `${RELAY_URL}?session=${sessionId}`;
 
     console.error('');
     console.error('[dk-harness-3d] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -70,6 +82,11 @@ async function register() {
     console.error('[dk-harness-3d] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.error(`[dk-harness-3d]  👤 Agent: ${AGENT_NAME} (${AGENT_ROLE})`);
     console.error(`[dk-harness-3d]  🏷  Team:  ${TEAM_ID}`);
+    if (roomId) {
+      console.error(`[dk-harness-3d]  🚪 Room:  ${ROOM_CODE} (이 룸에서 세션이 돕니다)`);
+    } else if (ROOM_CODE) {
+      console.error(`[dk-harness-3d]  🚪 Room:  ${ROOM_CODE} ⚠ 룸을 못 찾음 — 전역 세션으로 등록`);
+    }
     console.error(`[dk-harness-3d]  🔗 URL:   ${sessionUrl}`);
 
     if (rcEnabled) {

@@ -1,8 +1,20 @@
 import { randomBytes } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { inviteRegistry } from '@/lib/relay/invite-registry';
-import { resolveIdentity, setIdentityCookie } from '@/lib/relay/session-cookie';
+import { resolveIdentity, readIdentity, setIdentityCookie } from '@/lib/relay/session-cookie';
+import { allow } from '@/lib/relay/rate-limit';
 import { AGENT_CONFIG } from '@/lib/colors';
+
+// 발급 폭주 방지: 신원(쿠키) 또는 IP 당 분당 10회.
+const INVITE_RATE_LIMIT = 10;
+const INVITE_RATE_WINDOW_MS = 60 * 1000;
+
+function rateLimitKey(req: NextRequest): string {
+  const id = readIdentity(req);
+  if (id) return `invite:id:${id}`;
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  return `invite:ip:${ip}`;
+}
 
 // 발급 가능한 에이전트 이름 화이트리스트(자유 텍스트 발급 차단).
 const ALLOWED_AGENTS = new Set<string>(AGENT_CONFIG.map((a) => a.name));
@@ -22,6 +34,10 @@ function generateSessionId(): string {
 // Web mutation: no RELAY_SECRET gate (브라우저엔 로그인이 없음).
 export async function POST(req: NextRequest) {
   try {
+    if (!allow(rateLimitKey(req), INVITE_RATE_LIMIT, INVITE_RATE_WINDOW_MS)) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const body = (await req.json()) as {
       agentName?: string;
       expiresInMs?: number;

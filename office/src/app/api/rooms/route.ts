@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { roomRegistry } from '@/lib/relay/room-registry';
 import { readIdentity, resolveIdentity, setIdentityCookie } from '@/lib/relay/session-cookie';
+import { allow } from '@/lib/relay/rate-limit';
+
+// 룸 생성 폭주 방지: 신원(쿠키) 또는 IP 당 분당 5회.
+const ROOM_CREATE_RATE_LIMIT = 5;
+const ROOM_CREATE_RATE_WINDOW_MS = 60 * 1000;
+
+function roomRateLimitKey(req: NextRequest): string {
+  const id = readIdentity(req);
+  if (id) return `rooms:id:${id}`;
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  return `rooms:ip:${ip}`;
+}
 
 // GET /api/rooms — list public rooms and/or rooms the user belongs to
 // query: ?public=true  → public rooms only
@@ -46,6 +58,10 @@ export async function GET(req: NextRequest) {
 // Web mutation: no RELAY_SECRET gate (browser has no login; ingest endpoints keep the gate)
 export async function POST(req: NextRequest) {
   try {
+    if (!allow(roomRateLimitKey(req), ROOM_CREATE_RATE_LIMIT, ROOM_CREATE_RATE_WINDOW_MS)) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const body = (await req.json()) as {
       name?: string;
       ownerId?: string;
