@@ -1,6 +1,11 @@
 import { randomBytes } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { inviteRegistry } from '@/lib/relay/invite-registry';
+import { resolveIdentity, setIdentityCookie } from '@/lib/relay/session-cookie';
+import { AGENT_CONFIG } from '@/lib/colors';
+
+// 발급 가능한 에이전트 이름 화이트리스트(자유 텍스트 발급 차단).
+const ALLOWED_AGENTS = new Set<string>(AGENT_CONFIG.map((a) => a.name));
 
 // 발급 만료 허용 범위(클램프).
 const MIN_EXPIRES_MS = 60 * 1000; // 1 minute
@@ -27,9 +32,13 @@ export async function POST(req: NextRequest) {
     if (!agentName) {
       return NextResponse.json({ error: 'Missing required field: agentName' }, { status: 400 });
     }
-    if (agentName.length > 128) {
-      return NextResponse.json({ error: 'agentName exceeds 128 characters' }, { status: 400 });
+    // 알려진 에이전트만 발급 주체로 허용(임의 신원 토큰 발급 방지).
+    if (!ALLOWED_AGENTS.has(agentName)) {
+      return NextResponse.json({ error: 'agentName must be a known agent' }, { status: 400 });
     }
+
+    // 발급은 검증된 신원에 묶는다(없으면 신원을 발급해 쿠키로 내린다).
+    const identity = resolveIdentity(req);
 
     // 만료 클램프
     let expiresInMs = typeof body.expiresInMs === 'number' ? body.expiresInMs : DEFAULT_EXPIRES_MS;
@@ -47,7 +56,7 @@ export async function POST(req: NextRequest) {
     const sessionId = generateSessionId();
     const invite = await inviteRegistry.create(sessionId, agentName, '', expiresInMs, maxUses);
 
-    return NextResponse.json(
+    const res = NextResponse.json(
       {
         ok: true,
         code: invite.code,
@@ -58,6 +67,8 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 },
     );
+    if (identity.cookieValue) setIdentityCookie(res, identity.cookieValue);
+    return res;
   } catch (err) {
     console.error('[sessions/invite POST]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

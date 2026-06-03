@@ -60,6 +60,12 @@ export function LandingPage({ initialCode }: Readonly<LandingPageProps>) {
               harness 사용법
             </Link>
             <Link
+              href="/guide/manual"
+              className="rounded-lg border border-office-border px-4 py-2.5 text-sm font-bold text-office-text no-underline transition-colors duration-150 hover:border-dk-harness-orange"
+            >
+              전체 매뉴얼
+            </Link>
+            <Link
               href="/guide/dashboard"
               className="rounded-lg border border-office-border px-4 py-2.5 text-sm font-bold text-office-text no-underline transition-colors duration-150 hover:border-dk-harness-orange"
             >

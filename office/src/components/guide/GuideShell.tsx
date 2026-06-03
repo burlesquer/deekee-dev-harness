@@ -10,7 +10,7 @@ import type { ReactNode } from 'react';
 export const OFFICE_URL = 'https://office-black-zeta.vercel.app';
 export const GITHUB_URL = 'https://github.com/burlesquer/deekee-dev-harness';
 
-type GuideKey = 'harness' | 'dashboard';
+type GuideKey = 'harness' | 'dashboard' | 'manual';
 
 export interface GuideShellProps {
   readonly active: GuideKey;
@@ -30,6 +30,7 @@ export function GuideShell({ active, children }: Readonly<GuideShellProps>) {
 
           <div className="ml-auto flex items-center gap-1">
             <GuideNavLink href="/guide" label="harness" active={active === 'harness'} />
+            <GuideNavLink href="/guide/manual" label="전체 매뉴얼" active={active === 'manual'} />
             <GuideNavLink href="/guide/dashboard" label="3D 대시보드" active={active === 'dashboard'} />
           </div>
 

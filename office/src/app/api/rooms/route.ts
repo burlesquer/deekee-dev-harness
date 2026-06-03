@@ -1,23 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { roomRegistry } from '@/lib/relay/room-registry';
+import { readIdentity, resolveIdentity, setIdentityCookie } from '@/lib/relay/session-cookie';
 
 // GET /api/rooms — list public rooms and/or rooms the user belongs to
 // query: ?public=true  → public rooms only
 //        ?userId=xxx   → rooms where userId is a member
-// Read-only: no auth required
+//        ?mine=true    → rooms owned by the signed identity cookie (소유권 검증)
+// Read-only: no auth required (mine 은 서명 쿠키로 본인 룸만 노출)
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const sp = await Promise.resolve(searchParams);
     const publicOnly = sp.get('public') === 'true';
     const userId = sp.get('userId');
-    const ownerId = sp.get('ownerId');
+    const mine = sp.get('mine') === 'true';
 
     let rooms = await roomRegistry.getAll();
 
-    if (ownerId) {
-      // 내 룸 관리용: 내가 소유한(생성한) 룸만 반환
-      rooms = rooms.filter((r) => r.ownerId === ownerId);
+    if (mine) {
+      // 내 룸 관리용: 쿼리 파라미터가 아니라 "서명된 신원 쿠키"로 소유권을 확인한다(위조 불가).
+      const id = readIdentity(req);
+      rooms = id ? rooms.filter((r) => r.ownerId === id) : [];
     } else if (publicOnly) {
       rooms = await roomRegistry.getPublicRooms();
     } else if (userId) {
@@ -55,13 +58,14 @@ export async function POST(req: NextRequest) {
     if (!body.name || typeof body.name !== 'string') {
       return NextResponse.json({ error: 'Missing required field: name' }, { status: 400 });
     }
-    if (!body.ownerId || typeof body.ownerId !== 'string') {
-      return NextResponse.json({ error: 'Missing required field: ownerId' }, { status: 400 });
-    }
 
     if (body.name.length > 128) {
       return NextResponse.json({ error: 'name exceeds 128 characters' }, { status: 400 });
     }
+
+    // 소유자는 클라이언트가 보낸 ownerId 가 아니라 "서명된 신원 쿠키"에서 도출한다.
+    // (쿼리/바디 위조로 남의 룸을 만들거나 가로채는 IDOR 를 차단)
+    const identity = resolveIdentity(req);
 
     if (
       body.maxMembers !== undefined &&
@@ -72,7 +76,7 @@ export async function POST(req: NextRequest) {
 
     const room = await roomRegistry.create(
       body.name,
-      body.ownerId,
+      identity.id,
       body.teamId ?? '',
       {
         isPublic: body.isPublic,
@@ -81,7 +85,9 @@ export async function POST(req: NextRequest) {
       },
     );
 
-    return NextResponse.json({ ok: true, room }, { status: 201 });
+    const res = NextResponse.json({ ok: true, room }, { status: 201 });
+    if (identity.cookieValue) setIdentityCookie(res, identity.cookieValue);
+    return res;
   } catch (err) {
     console.error('[rooms POST]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

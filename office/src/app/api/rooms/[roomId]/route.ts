@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { roomRegistry } from '@/lib/relay/room-registry';
+import { readIdentity } from '@/lib/relay/session-cookie';
 
 // GET /api/rooms/[roomId] — room detail + members
 // Read-only: no auth required
@@ -21,7 +22,7 @@ export async function GET(
 }
 
 // DELETE /api/rooms/[roomId] — delete room (owner only)
-// Web mutation: no RELAY_SECRET gate; ownership is enforced via x-owner-id instead
+// Web mutation: 소유권은 "서명된 신원 쿠키"로 강제한다(헤더/쿼리 위조 불가).
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ roomId: string }> },
@@ -33,8 +34,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
 
-    const ownerId = req.headers.get('x-owner-id') ?? new URL(req.url).searchParams.get('ownerId');
-    if (ownerId && room.ownerId !== ownerId) {
+    // 검증된 신원만 자기 룸을 삭제할 수 있다.
+    const id = readIdentity(req);
+    if (!id || room.ownerId !== id) {
       return NextResponse.json({ error: 'Forbidden: only the room owner can delete this room' }, { status: 403 });
     }
 

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getClientId } from '@/lib/client-id';
 
 /** API가 반환하는 원본 Room shape(필요한 필드만). */
 interface ApiRoom {
@@ -51,8 +50,8 @@ export function RoomManager() {
     setIsLoading(true);
     setError(null);
     try {
-      const ownerId = getClientId();
-      const res = await fetch(`/api/rooms?ownerId=${encodeURIComponent(ownerId)}`);
+      // 서명된 신원 쿠키로 "내 룸"을 조회한다(같은 출처 fetch 라 쿠키 자동 전송).
+      const res = await fetch('/api/rooms?mine=true');
       if (!res.ok) throw new Error('fetch failed');
       const data = (await res.json()) as { rooms: ApiRoom[] };
       setRooms((data.rooms ?? []).map(toMyRoom));
@@ -74,10 +73,9 @@ export function RoomManager() {
       setDeletingId(roomId);
       setError(null);
       try {
-        const ownerId = getClientId();
+        // 삭제 인가는 서명된 신원 쿠키로 처리된다(헤더로 ownerId 를 보내지 않는다).
         const res = await fetch(`/api/rooms/${encodeURIComponent(roomId)}`, {
           method: 'DELETE',
-          headers: { 'x-owner-id': ownerId },
         });
         if (!res.ok) {
           setError('룸 삭제에 실패했습니다');
