@@ -9,9 +9,27 @@ export interface CreateRoomModalProps {
 
 interface CreateRoomPayload {
   name: string;
+  ownerId: string;
   isPublic: boolean;
   maxMembers: number;
   allowSpectators: boolean;
+}
+
+/**
+ * 이 브라우저의 안정적 소유자 ID 를 반환합니다 (localStorage 에 1회 생성·보관).
+ * 로그인이 없는 데모 환경에서 룸 ownerId 로 사용됩니다.
+ */
+function getClientId(): string {
+  const KEY = 'dk-office-client-id';
+  try {
+    const existing = localStorage.getItem(KEY);
+    if (existing) return existing;
+    const id = crypto.randomUUID();
+    localStorage.setItem(KEY, id);
+    return id;
+  } catch {
+    return `anon-${crypto.randomUUID()}`;
+  }
 }
 
 interface CreateRoomResponse {
@@ -58,6 +76,7 @@ export function CreateRoomModal({ onClose, onCreated }: Readonly<CreateRoomModal
 
     const payload: CreateRoomPayload = {
       name: trimmedName,
+      ownerId: getClientId(),
       isPublic,
       maxMembers,
       allowSpectators,

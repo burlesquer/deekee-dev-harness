@@ -4,6 +4,37 @@
  */
 
 /**
+ * dk-harness 에이전트 로스터 — office AGENT_CONFIG 와 1:1 매칭.
+ * 키는 소문자, 값은 canonical 표시 이름.
+ */
+export const ROSTER = {
+  sam: 'Sam',
+  able: 'Able',
+  klay: 'Klay',
+  jay: 'Jay',
+  jerry: 'Jerry',
+  milla: 'Milla',
+  willji: 'Willji',
+  derek: 'Derek',
+  rowan: 'Rowan',
+  iron: 'Iron',
+};
+
+/**
+ * dk-harness 규칙 `"{Name}: {task}"` 형식의 설명에서 로스터 에이전트 이름을 추출합니다.
+ * 콜론 앞 토큰이 로스터에 있으면 canonical 이름을, 아니면 null 을 반환합니다.
+ * @param {string | null | undefined} description
+ * @returns {string | null}
+ */
+export function parseAgentName(description) {
+  if (typeof description !== 'string') return null;
+  const colon = description.indexOf(':');
+  if (colon === -1) return null;
+  const key = description.slice(0, colon).trim().toLowerCase();
+  return ROSTER[key] ?? null;
+}
+
+/**
  * stdin 에서 JSON 문자열을 읽습니다.
  * DK_STDIN_TIMEOUT ms (기본 1000) 안에 응답이 없으면 '{}'을 반환합니다.
  * @returns {Promise<string>}
