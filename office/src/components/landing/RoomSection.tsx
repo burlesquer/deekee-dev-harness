@@ -18,6 +18,32 @@ export interface RoomSectionProps {
   readonly onEntering?: () => void;
 }
 
+/** API가 반환하는 원본 Room shape (members[] + settings 중첩). */
+interface ApiRoom {
+  readonly id: string;
+  readonly code: string;
+  readonly name: string;
+  readonly members: readonly unknown[];
+  readonly settings: {
+    readonly maxMembers: number;
+    readonly isPublic: boolean;
+    readonly allowSpectators: boolean;
+  };
+}
+
+/** 원본 Room → 화면용 평탄형 RoomInfo 로 변환. */
+function toRoomInfo(r: ApiRoom): RoomInfo {
+  return {
+    id: r.id,
+    name: r.name,
+    code: r.code,
+    isPublic: r.settings?.isPublic ?? false,
+    memberCount: Array.isArray(r.members) ? r.members.length : 0,
+    maxMembers: r.settings?.maxMembers ?? 0,
+    allowSpectators: r.settings?.allowSpectators ?? false,
+  };
+}
+
 function formatRoomCode(raw: string): string {
   const clean = raw.replace(/[^A-Za-z0-9-]/g, '').toUpperCase().slice(0, 12);
   return clean;
@@ -39,8 +65,8 @@ export function RoomSection({ onEntering }: Readonly<RoomSectionProps>) {
     try {
       const res = await fetch('/api/rooms?public=true');
       if (!res.ok) throw new Error('룸 목록을 불러오지 못했습니다');
-      const data = (await res.json()) as { rooms: RoomInfo[] };
-      setRooms(data.rooms ?? []);
+      const data = (await res.json()) as { rooms: ApiRoom[] };
+      setRooms((data.rooms ?? []).map(toRoomInfo));
     } catch {
       setLoadError('룸 목록을 불러오지 못했습니다');
       setRooms([]);

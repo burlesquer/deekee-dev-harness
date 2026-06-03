@@ -96,8 +96,14 @@ export function CreateRoomModal({ onClose, onCreated }: Readonly<CreateRoomModal
         return;
       }
 
-      const data = (await res.json()) as CreateRoomResponse;
-      setCreatedRoom(data);
+      // API는 { ok: true, room: {...} } 형태로 감싸서 반환한다.
+      const data = (await res.json()) as { room?: CreateRoomResponse };
+      if (!data.room) {
+        setError('룸 생성 응답이 올바르지 않습니다');
+        setIsSubmitting(false);
+        return;
+      }
+      setCreatedRoom(data.room);
       setIsSubmitting(false);
     } catch {
       setError('서버 연결에 실패했습니다');
