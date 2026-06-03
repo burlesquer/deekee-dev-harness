@@ -1,0 +1,35 @@
+---
+name: explore
+description: "🔍 Klay 에이전트로 코드베이스 탐색. 구조, 패턴, 의존성 파악."
+triggers: ["explore", "탐색", "찾아", "구조", "분석"]
+---
+
+{{PREAMBLE_T1}}
+
+# /dk-harness explore — Codebase Exploration
+
+## Usage
+```
+/dk-harness explore <target>
+/dk-harness explore src/
+/dk-harness explore "auth 모듈"
+```
+
+## Agent Deployment
+
+Spawn Klay with the `description` parameter for terminal visibility:
+
+```
+Agent({
+  subagent_type: "dk-harness:klay",
+  description: "Klay: 코드베이스 탐색 — {target}",
+  model: "haiku",
+  prompt: "..."
+})
+```
+
+터미널 표시:
+```
+⏺ dk-harness:klay(Klay: 코드베이스 탐색 — src/auth) Haiku
+  ⎿  Done (12 tool uses · 28.3k tokens · 1m 15s)
+```

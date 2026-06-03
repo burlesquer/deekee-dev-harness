@@ -1,0 +1,24 @@
+node_modules/
+.omc/
+.dk-harness/
+.gemini/
+.claude/
+.commandcode/
+.agents/
+.bkit/
+.env*
+coverage/
+*.log
+*.tmp
+.DS_Store
+.pdca-status.json
+skills-lock.json
+gemini-extension.json
+docs/superpowers/
+# IDE
+.idea/
+
+# office (Next.js) build artifacts
+office/node_modules/
+office/.next/
+office/out/

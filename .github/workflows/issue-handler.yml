@@ -1,0 +1,37 @@
+name: "dk-harness Issue Handler"
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  handle-issue:
+    if: contains(github.event.issue.labels.*.name, 'dk-harness-auto')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Process Issue with Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          direct_prompt: |
+            이 GitHub Issue를 분석하고 수정하세요.
+
+            규칙:
+            - 이 프로젝트는 dk-harness Claude Code 플러그인입니다.
+            - 에이전트 정의는 agents/*.md에 있습니다.
+            - hook handler는 hooks-handlers/*.mjs에 있습니다.
+            - 스킬 정의는 skills/*/SKILL.md에 있습니다.
+            - 외부 의존성 추가 금지 (Node.js 빌트인만 사용).
+            - 수정이 필요하면 코드를 변경하고 PR을 생성하세요.
+            - 자동 처리가 불가능하면 분석 결과를 코멘트로 남기세요.
+          allowed_tools: "Bash,Read,Write,Edit,Glob,Grep"

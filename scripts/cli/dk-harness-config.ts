@@ -1,0 +1,108 @@
+/**
+ * dk-harness Config Manager — Read/write/list configuration
+ * @module scripts/cli/dk-harness-config
+ */
+import { readStateOrDefault, writeState } from '../core/state.js';
+import { resetConfigCache } from '../core/config.js';
+import { join } from 'node:path';
+
+const CONFIG_FILE = '.dk-harness/config.json';
+
+/**
+ * Get a config value.
+ */
+export function getConfig(key: string, fallback?: unknown, projectDir?: string): unknown {
+  const dir = projectDir || process.cwd();
+  const config = readStateOrDefault(join(dir, CONFIG_FILE), {}) as Record<string, unknown>;
+  return getNestedValue(config, key) ?? fallback;
+}
+
+/**
+ * Set a config value.
+ */
+export function setConfig(key: string, value: unknown, projectDir?: string): void {
+  const dir = projectDir || process.cwd();
+  const configPath = join(dir, CONFIG_FILE);
+  const config = readStateOrDefault(configPath, {}) as Record<string, unknown>;
+  setNestedValue(config, key, value);
+  writeState(configPath, config);
+  resetConfigCache();
+}
+
+// ---------------------------------------------------------------------------
+// Profile presets
+// ---------------------------------------------------------------------------
+
+const PROFILE_PRESETS: Record<string, Record<string, unknown>> = {
+  light: {
+    costMode: 'budget',
+    maxTeamSize: 2,
+    tokenLimit: 50000,
+    agents: {
+      categories: { leadership: true, backend: true, frontend: false, design: false, aiml: false, special: true },
+      deny: [],
+      allow: [],
+    },
+  },
+  standard: {
+    costMode: 'balanced',
+    maxTeamSize: 4,
+    tokenLimit: null,
+    agents: {
+      categories: { leadership: true, backend: true, frontend: true, design: true, aiml: false, special: true },
+      deny: [],
+      allow: [],
+    },
+  },
+  full: {
+    costMode: 'quality',
+    maxTeamSize: 7,
+    tokenLimit: null,
+    agents: {
+      categories: { leadership: true, backend: true, frontend: true, design: true, aiml: true, special: true },
+      deny: [],
+      allow: [],
+    },
+  },
+};
+
+/**
+ * Apply a named profile preset to config.
+ * Returns true if preset was found and applied, false otherwise.
+ */
+export function applyProfilePreset(presetName: string, projectDir?: string): boolean {
+  const preset = PROFILE_PRESETS[presetName];
+  if (!preset) return false;
+  setConfig('profile', preset, projectDir);
+  return true;
+}
+
+/**
+ * List all config values.
+ */
+export function listConfig(projectDir?: string): Record<string, unknown> {
+  const dir = projectDir || process.cwd();
+  return readStateOrDefault(join(dir, CONFIG_FILE), {}) as Record<string, unknown>;
+}
+
+/**
+ * Format config for display.
+ */
+export function formatConfig(config: Record<string, unknown>): string {
+  if (Object.keys(config).length === 0) return 'No configuration set.';
+  return JSON.stringify(config, null, 2);
+}
+
+function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
+  return path.split('.').reduce((o: unknown, k: string) => (o as Record<string, unknown>)?.[k], obj);
+}
+
+function setNestedValue(obj: Record<string, unknown>, path: string, value: unknown): void {
+  const keys = path.split('.');
+  let current: Record<string, unknown> = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (current[keys[i]] == null) current[keys[i]] = {};
+    current = current[keys[i]] as Record<string, unknown>;
+  }
+  current[keys[keys.length - 1]] = value;
+}

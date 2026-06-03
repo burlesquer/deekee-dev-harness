@@ -1,0 +1,154 @@
+/**
+ * dk-harness PreToolUse Hook v1.3.2
+ */
+import { readStdinJSON } from '../scripts/core/stdin.js';
+import { norchToolUse, norchAgentSpawn } from '../scripts/core/norch-bridge.js';
+import { checkBashCommand, checkFilePath, formatViolations } from '../scripts/guardrail/guardrail-engine.js';
+import { checkStepLimit, checkFileChangeLimit, checkForbiddenPath } from '../scripts/guardrail/safety-invariants.js';
+import { isDryRunActive, queueChange, formatPreview } from '../scripts/guardrail/dry-run.js';
+import { checkAgentAllowed, getExpectedAgent, isIterationTimedOut, trackAgentCall } from '../scripts/hooks/plan-state.js';
+import { trackAgentSpawn } from '../scripts/guardrail/agent-budget.js';
+import { hasMinimumEvidence } from '../scripts/guardrail/evidence-gate.js';
+
+interface ParsedInput {
+  tool_name?: string;
+  tool_input?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface CheckResult {
+  ok: boolean;
+  message?: string;
+}
+
+
+const parsed: ParsedInput = await readStdinJSON();
+
+try {
+  const toolName: string = parsed.tool_name || '';
+  const toolInput: Record<string, unknown> = parsed.tool_input || {};
+  const projectDir: string = process.env.PROJECT_DIR || process.cwd();
+  const ctx: string[] = [];
+
+  // Agent/Task spawn — Hard Limit 2: description 필수 (hook-enforced, not prompt-based)
+  if (toolName === 'Agent' || toolName === 'Task') {
+    const desc = (toolInput.description as string) || '';
+    if (desc.length < 10) {
+      process.stdout.write(JSON.stringify({
+        hookSpecificOutput: { decision: 'block', reason: `[dk-harness:hard-limit] Agent/Task 호출 시 description 필수 (최소 10자). 현재: ${desc.length}자. 형식: "{Name}: {task summary}"` }
+      }));
+      process.exit(0);
+    }
+  }
+
+  // TaskUpdate — Hard Limit 1: 증거 없이 완료 처리 불가 (hook-enforced)
+  if (toolName === 'TaskUpdate' && toolInput.status === 'completed') {
+    const gate = hasMinimumEvidence(projectDir);
+    if (!gate.ok) {
+      process.stdout.write(JSON.stringify({
+        hookSpecificOutput: { decision: 'block', reason: `[dk-harness:hard-limit] 증거 없이 완료 처리 불가. 먼저 npm test, tsc --noEmit 등을 실행하세요. (${gate.reason})` }
+      }));
+      process.exit(0);
+    }
+  }
+
+  if ((toolName === 'Agent' || toolName === 'Task') && toolInput.subagent_type) {
+    const agentKey = (toolInput.name as string) || (toolInput.subagent_type as string).replace('dk-harness:', '');
+    norchAgentSpawn('session', agentKey, toolInput.description as string);
+
+    // Universal agent budget guard (works for all skills: auto, team, plan-task, etc.)
+    const subagentType = toolInput.subagent_type as string;
+    if (subagentType.startsWith('dk-harness:')) {
+      const budget = trackAgentSpawn(projectDir, agentKey);
+      if (budget.warn) ctx.push(budget.warn);
+    }
+
+    // Phase gate: only enforce DKH-DR phase ordering when a plan session is actively running
+    if (subagentType.startsWith('dk-harness:')) {
+      // Iteration timeout guard: warn (not block) when iteration budget is exceeded
+      if (isIterationTimedOut(projectDir)) {
+        ctx.push('[dk-harness:iteration-timeout] Iteration time budget (3min) exceeded. Consider using current best plan version and proceeding to persist.');
+      }
+
+      // Agent call cap: warn when approaching/exceeding limit
+      if (!trackAgentCall(projectDir)) {
+        ctx.push('[dk-harness:agent-cap] Agent call limit (10) exceeded for this plan session. Consider finalizing with current best version.');
+      }
+
+      const phaseCheck = checkAgentAllowed(projectDir, subagentType);
+      // Only block if phase check explicitly says not allowed AND has an active reason
+      // (avoids blocking due to stale state files from completed/terminated sessions)
+      if (!phaseCheck.allowed && phaseCheck.reason && !phaseCheck.reason.includes('no active')) {
+        const expected = getExpectedAgent(projectDir);
+        const guidance = expected
+          ? `Current phase "${expected.phase}" expects: ${expected.agents.map(a => `dk-harness:${a}`).join(' or ')}. Spawn the correct agent first.`
+          : phaseCheck.reason || 'Agent not allowed in current phase.';
+        process.stdout.write(JSON.stringify({
+          hookSpecificOutput: { decision: 'block', reason: `[dk-harness:phase-gate] ${guidance}` }
+        }));
+        process.exit(0);
+      }
+    }
+  } else if (toolName === 'SendMessage' && toolInput.to) {
+    const agentKey = (toolInput.to as string).replace('dk-harness:', '');
+    norchToolUse('session', 'SendMessage', toolInput.to as string, agentKey);
+  } else {
+    norchToolUse('session', toolName, (toolInput.file_path as string) || (toolInput.command as string)?.slice(0, 50), undefined);
+  }
+  const step: CheckResult = checkStepLimit(projectDir);
+  if (!step.ok) ctx.push(step.message!);
+
+  if (toolName === 'Bash' && toolInput.command) {
+    const r = checkBashCommand(toolInput.command as string, projectDir);
+    if (!r.allowed) {
+      process.stdout.write(JSON.stringify({ hookSpecificOutput: { decision: 'block', reason: formatViolations(r.violations) } }));
+      process.exit(0);
+    }
+    if (r.violations.length > 0) ctx.push(formatViolations(r.violations));
+  }
+
+  if ((toolName === 'Write' || toolName === 'Edit') && toolInput.file_path) {
+    const fb: CheckResult = checkForbiddenPath(toolInput.file_path as string, projectDir);
+    if (!fb.ok) {
+      process.stdout.write(JSON.stringify({ hookSpecificOutput: { decision: 'block', reason: fb.message } }));
+      process.exit(0);
+    }
+    const fc: CheckResult = checkFileChangeLimit(toolInput.file_path as string, projectDir);
+    if (!fc.ok) ctx.push(fc.message!);
+    const fr = checkFilePath(toolInput.file_path as string, projectDir);
+    if (fr.violations.length > 0) ctx.push(formatViolations(fr.violations));
+    if (isDryRunActive(projectDir)) {
+      queueChange({ type: toolName.toLowerCase() as 'write' | 'edit', target: toolInput.file_path as string }, projectDir);
+      ctx.push(formatPreview(projectDir));
+    }
+  }
+
+  // Reality check flag: indirect block (set by post-tool-use, cleared on session stop)
+  // Placed after isDryRunActive() check to avoid conflict with dry-run queuing
+  if (!isDryRunActive(projectDir)) {
+    try {
+      const { existsSync, readFileSync } = await import('node:fs');
+      const { join } = await import('node:path');
+      const flagPath = join(projectDir, '.dk-harness', 'state', 'reality-check-flag.json');
+      if (existsSync(flagPath)) {
+        const flag = JSON.parse(readFileSync(flagPath, 'utf-8')) as { active?: boolean; scenario?: string };
+        if (flag.active) {
+          process.stdout.write(JSON.stringify({
+            hookSpecificOutput: {
+              decision: 'block',
+              reason: `[dk-harness:reality-check] Reality check flag active (scenario: ${flag.scenario || 'unknown'}). Session requires review before proceeding.`,
+            }
+          }));
+          process.exit(0);
+        }
+      }
+    } catch { /* flag check is best-effort — never block on error */ }
+  }
+
+  process.stdout.write(ctx.length > 0
+    ? JSON.stringify({ hookSpecificOutput: { additionalContext: ctx.join('\n\n') } })
+    : '{}');
+} catch (err: unknown) {
+  process.stderr.write(`[dk-harness:pre-tool-use] ${(err as Error).message}\n`);
+  process.stdout.write('{}');
+}

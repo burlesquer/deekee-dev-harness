@@ -1,0 +1,45 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "dk-harness-marketplace",
+  "version": "2.9.21",
+  "description": "dk-harness Harness Engineering Agent marketplace",
+  "owner": {
+    "name": "deekee",
+    "email": "burlesquer@yonsei.ac.kr",
+    "url": "https://github.com/burlesquer"
+  },
+  "plugins": [
+    {
+      "name": "dk-harness",
+      "description": "Harness Engineering Agent — 21 named agents, 45 skills, DKH-DR Consensus Planning, AI Pipeline, 1454 tests, 33 Innovations.",
+      "version": "2.9.21",
+      "author": {
+        "name": "deekee",
+        "email": "burlesquer@yonsei.ac.kr"
+      },
+      "repository": "https://github.com/burlesquer/deekee-dev-harness",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/burlesquer/deekee-dev-harness.git"
+      },
+      "category": "development",
+      "keywords": [
+        "harness-engineering",
+        "pdca",
+        "context-budget",
+        "self-healing",
+        "evidence-chain",
+        "adaptive-routing",
+        "cross-session-learning",
+        "review-pipeline",
+        "ship-workflow",
+        "cso-security",
+        "ai-slop-detection",
+        "autoplan",
+        "llm-judge",
+        "ai-native",
+        "multilingual"
+      ]
+    }
+  ]
+}

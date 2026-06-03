@@ -1,0 +1,74 @@
+name: "Tests"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build TypeScript
+        run: npm run build:ts
+
+      - name: Run .mjs tests (dist-based)
+        run: node --test tests/*.test.mjs tests/eval/*.mjs tests/unit/land-orchestrator.test.mjs
+
+      - name: Run vitest unit tests
+        run: npx vitest run
+
+      - name: Run E2E skill tests
+        run: npx tsx --test tests/e2e/skills/*.e2e.test.ts tests/e2e/browse/*.test.ts
+
+      - name: Run teaching tests
+        run: npx tsx --test tests/teaching/*.test.ts
+
+  agent-consistency:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Check agent prompt consistency
+        continue-on-error: true
+        run: npx tsx scripts/build/check-agent-consistency.ts
+
+  harness-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run harness integration tests
+        run: npx vitest run --config vitest.config.harness.ts

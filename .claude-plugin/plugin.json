@@ -1,0 +1,28 @@
+{
+  "name": "dk-harness",
+  "version": "2.9.21",
+  "description": "Harness Engineering Agent — 21 named agents, 45 skills, DKH-DR Consensus Planning, AI Pipeline, 1454 tests, 33 Innovations",
+  "author": {
+    "name": "deekee",
+    "url": "https://github.com/burlesquer"
+  },
+  "repository": "https://github.com/burlesquer/deekee-dev-harness",
+  "license": "Apache-2.0",
+  "keywords": [
+    "harness-engineering",
+    "pdca",
+    "context-budget",
+    "self-healing",
+    "evidence-chain",
+    "adaptive-routing",
+    "cross-session-learning",
+    "review-pipeline",
+    "ship-workflow",
+    "cso-security",
+    "ai-slop-detection",
+    "autoplan",
+    "llm-judge",
+    "ai-native",
+    "multilingual"
+  ]
+}

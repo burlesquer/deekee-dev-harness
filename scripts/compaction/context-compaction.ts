@@ -1,0 +1,221 @@
+/**
+ * dk-harness Context Compaction Strategy v0.4.0
+ * Intelligent context preservation during compaction.
+ * Harness Engineering: Inform axis — survive context window limits.
+ * @module scripts/compaction/context-compaction
+ */
+
+import { readStateOrDefault } from '../core/state.js';
+import { getConfig } from '../core/config.js';
+import { createLogger } from '../core/logger.js';
+import { estimateTokens } from '../core/context-budget.js';
+import { getProgressSummary } from '../guardrail/progress-tracker.js';
+import { join } from 'node:path';
+import { readdirSync } from 'node:fs';
+
+const log = createLogger('compaction');
+
+/**
+ * Priority levels for context preservation.
+ * Higher number = higher priority = preserved first.
+ */
+const PRIORITY: Record<string, number> = {
+  PDCA_STATE: 100,       // Always preserve — PDCA progress
+  AGENT_STATE: 95,       // Active agent spawns and team pipeline
+  PROGRESS: 90,          // Session continuity
+  SAFETY_INVARIANTS: 85, // Guardrail state
+  DENIAL_SUMMARY: 85,    // Guardrail denial audit trail
+  EVIDENCE_CHAIN: 80,    // Verification evidence
+  PROJECT_MEMORY: 70,    // Learned patterns
+  ROUTING_HISTORY: 40,   // Nice to have
+  TRACE_SUMMARY: 30      // Debug info
+};
+
+interface CompactionSection {
+  priority: number;
+  label: string;
+  content: string;
+}
+
+interface CompactionResult {
+  context: string;
+  preserved: string[];
+  dropped: string[];
+  tokens: number;
+}
+
+interface PdcaState {
+  activeFeature?: string;
+  features?: Record<string, { currentStage?: string; iteration?: number }>;
+}
+
+interface InvariantsTracker {
+  steps: number;
+  fileChanges: number;
+  errors: number;
+}
+
+interface EvidenceData {
+  feature?: string;
+  verdict?: string;
+  entries?: unknown[];
+}
+
+interface ProjectMemory {
+  patterns?: unknown[];
+  pitfalls?: unknown[];
+  techStack?: Record<string, unknown>;
+}
+
+/**
+ * Build compaction context — what to preserve when context is compressed.
+ */
+export function buildCompactionContext(projectDir?: string): CompactionResult {
+  const dir = projectDir || process.cwd();
+  const maxTokens = getConfig('context.maxCompactionTokens', 1500) as number;
+  const sections: CompactionSection[] = [];
+
+  // Gather all preservable sections with priorities
+  const pdcaState = readStateOrDefault(join(dir, '.dk-harness', 'state', 'pdca-status.json'), null) as PdcaState | null;
+  if (pdcaState && pdcaState.activeFeature) {
+    const feat = pdcaState.features?.[pdcaState.activeFeature];
+    sections.push({
+      priority: PRIORITY.PDCA_STATE,
+      label: 'PDCA State',
+      content: `PDCA: ${pdcaState.activeFeature} — ${feat?.currentStage || 'unknown'} (iter ${feat?.iteration || 0})`
+    });
+  }
+
+  // Active agent/team state (spawned agents, pipeline stage)
+  const agentState = readStateOrDefault(join(dir, '.dk-harness', 'state', 'agent-tracker.json'), null) as {
+    activeAgents?: Array<{ name: string; status: string; spawnedAt: string }>;
+    teamStage?: string;
+    teamPreset?: string;
+  } | null;
+  if (agentState?.activeAgents?.length) {
+    const running = agentState.activeAgents.filter(a => a.status === 'running');
+    const parts: string[] = [];
+    if (running.length > 0) parts.push(`Running: ${running.map(a => a.name).join(', ')}`);
+    if (agentState.teamStage) parts.push(`Team stage: ${agentState.teamStage}`);
+    if (agentState.teamPreset) parts.push(`Preset: ${agentState.teamPreset}`);
+    sections.push({
+      priority: PRIORITY.AGENT_STATE,
+      label: 'Agents',
+      content: parts.join(' | ')
+    });
+  }
+
+  // Denial audit summary (guardrail denials in this session)
+  const denialState = readStateOrDefault(join(dir, '.dk-harness', 'state', 'denial-audit.json'), null) as {
+    sessionDenials?: number;
+    topRules?: Array<{ ruleId: string; count: number }>;
+    recentDenials?: Array<{ ruleId: string; message: string }>;
+  } | null;
+  if (denialState?.sessionDenials && denialState.sessionDenials > 0) {
+    const topRules = denialState.topRules?.slice(0, 3).map(r => `${r.ruleId}(${r.count})`).join(', ') || 'n/a';
+    sections.push({
+      priority: PRIORITY.DENIAL_SUMMARY,
+      label: 'Denials',
+      content: `${denialState.sessionDenials} guardrail denials this session. Top: ${topRules}`
+    });
+  }
+
+  // Progress summary
+  const progress = getProgressSummary(dir);
+  if (progress) {
+    sections.push({
+      priority: PRIORITY.PROGRESS,
+      label: 'Progress',
+      content: progress
+    });
+  }
+
+  // Safety invariant tracker
+  const tracker = readStateOrDefault(join(dir, '.dk-harness', 'state', 'invariants-tracker.json'), null) as InvariantsTracker | null;
+  if (tracker && tracker.steps > 0) {
+    sections.push({
+      priority: PRIORITY.SAFETY_INVARIANTS,
+      label: 'Safety',
+      content: `Steps: ${tracker.steps}, Files changed: ${tracker.fileChanges}, Errors: ${tracker.errors}`
+    });
+  }
+
+  // Evidence chain (latest)
+  try {
+    const stateDir = join(dir, '.dk-harness', 'state');
+    const files = readdirSync(stateDir).filter((f: string) => f.startsWith('evidence-'));
+    for (const f of files.slice(-2)) {
+      const data = readStateOrDefault(join(stateDir, f), null) as EvidenceData | null;
+      if (data && data.verdict) {
+        sections.push({
+          priority: PRIORITY.EVIDENCE_CHAIN,
+          label: `Evidence (${data.feature})`,
+          content: `${data.feature}: ${data.verdict} — ${data.entries?.length || 0} evidence items`
+        });
+      }
+    }
+  } catch (_) { /* best effort */ }
+
+  // Project memory summary
+  const memory = readStateOrDefault(join(dir, '.dk-harness', 'project-memory.json'), null) as ProjectMemory | null;
+  if (memory) {
+    const parts: string[] = [];
+    if (memory.patterns?.length) parts.push(`${memory.patterns.length} patterns`);
+    if (memory.pitfalls?.length) parts.push(`${memory.pitfalls.length} pitfalls`);
+    if (Object.keys(memory.techStack || {}).length) parts.push(`tech: ${Object.keys(memory.techStack!).join(', ')}`);
+    if (parts.length > 0) {
+      sections.push({
+        priority: PRIORITY.PROJECT_MEMORY,
+        label: 'Memory',
+        content: `Project memory: ${parts.join(', ')}`
+      });
+    }
+  }
+
+  // Sort by priority (highest first)
+  sections.sort((a, b) => b.priority - a.priority);
+
+  // Build context within token budget
+  const preserved: string[] = [];
+  const dropped: string[] = [];
+  let totalContent = '';
+
+  for (const section of sections) {
+    const candidate = totalContent + `\n[${section.label}] ${section.content}`;
+    if (estimateTokens(candidate) <= maxTokens) {
+      totalContent = candidate;
+      preserved.push(section.label);
+    } else {
+      dropped.push(section.label);
+    }
+  }
+
+  const context = totalContent.trim();
+  const tokens = estimateTokens(context);
+
+  log.info('Compaction context built', { preserved, dropped, tokens: `~${tokens}` });
+
+  return { context, preserved, dropped, tokens };
+}
+
+/**
+ * Generate the compaction injection string for PreCompact hook.
+ */
+export function generateCompactionInjection(projectDir?: string): string {
+  const { context, preserved, dropped } = buildCompactionContext(projectDir);
+
+  if (!context) return '';
+
+  const lines: string[] = [
+    '[dk-harness] Context preserved across compaction:',
+    context,
+    '',
+    `Preserved: ${preserved.join(', ')}`,
+  ];
+
+  if (dropped.length > 0) {
+    lines.push(`Dropped (budget): ${dropped.join(', ')}`);
+  }
+
+  return lines.join('\n');
+}

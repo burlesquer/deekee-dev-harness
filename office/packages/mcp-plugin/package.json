@@ -1,0 +1,17 @@
+{
+  "name": "dk-harness-3d-mcp",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": { "dk-harness-3d-mcp": "./dist/server.js" },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "latest"
+  },
+  "devDependencies": {
+    "tsx": "latest",
+    "typescript": "^5"
+  }
+}
