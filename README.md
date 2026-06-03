@@ -1,121 +1,33 @@
-<p align="center">
-  <img src="images/banner.svg" width="600" alt="dk-harness Harness Engineering Agent">
-</p>
+<div align="center">
 
-<p align="center">
-  <a href="#install">Install</a> · <a href="#team">Team</a> · <a href="#why">Why dk-harness</a> · <a href="#quick-start">Quick Start</a> · <a href="#performance">Performance</a> · <a href="docs/COMMANDS.md">Commands</a> · <a href="docs/USER-GUIDE.md">Guide</a>
-</p>
+<img src="images/banner.svg" width="560" alt="dk-harness" />
 
----
+### Claude Code를 21명의 에이전트 팀으로 바꾸는 엔지니어링 하네스
 
-## Install
+당신은 한 사람과 대화하지 않습니다. **CTO, 설계자, 백엔드, 보안, 디자이너, 검증가** — 역할을 가진 팀과 일합니다.
 
-```
-/plugin marketplace add burlesquer/deekee-dev-harness
-/plugin install dk-harness
-```
+<br/>
 
-업데이트: `claude plugin update dk-harness@dk-harness-marketplace`
+[![version](https://img.shields.io/badge/version-2.9.21-FF6B2C)](https://github.com/burlesquer/deekee-dev-harness)
+[![Claude Code](https://img.shields.io/badge/Claude_Code-v2.1.69+-000)](https://claude.com/claude-code)
+[![tests](https://img.shields.io/badge/tests-1454_passing-22C55E)](#스펙)
+[![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
-> 릴리즈 방법: [docs/RELEASE.md](docs/RELEASE.md) 참고. `package.json` + `.claude-plugin/marketplace.json` + `.claude-plugin/plugin.json` 3곳 버전 동일 필수.
+[설치](#설치) · [팀](#에이전트-팀-21명) · [시작하기](#시작하기) · [3D 오피스](#3d-오피스--에이전트-관전) · [스펙](#스펙)
+
+</div>
 
 ---
 
-<h2 id="team">Agent Team (21 named agents)</h2>
+## 무엇인가요
 
-<table>
-<tr>
-<td width="50%" valign="top">
+**dk-harness**는 Claude Code 위에 얹는 플러그인입니다. 설치하면 Claude Code가 한 명의 비서가 아니라, **21명의 전문 에이전트로 구성된 팀**처럼 일합니다.
 
-### Leadership
-
-| | Name | Role | Model |
-|:---:|------|------|:-----:|
-| <img src="images/simon.svg" width="18"> | **Simon** | CEO / Product Strategy | `opus` |
-| <img src="images/sam.svg" width="18"> | **Sam** | CTO / Lead | `opus` |
-| <img src="images/able.svg" width="18"> | **Able** | PM / Planning | `opus` |
-| <img src="images/klay.svg" width="18"> | **Klay** | Architect / Explorer | `opus` |
-| | **Ryan** | Deliberation Facilitator | `opus` |
-
-### Design
-
-| | Name | Role | Model |
-|:---:|------|------|:-----:|
-| <img src="images/willji.svg" width="18"> | **Willji** | UI/UX Designer | `sonnet` |
-
-</td>
-<td width="50%" valign="top">
-
-### Backend
-
-| | Name | Role | Model |
-|:---:|------|------|:-----:|
-| <img src="images/jay.svg" width="18"> | **Jay** | API Development | `sonnet` |
-| <img src="images/jerry.svg" width="18"> | **Jerry** | DB / Infrastructure | `sonnet` |
-| <img src="images/milla.svg" width="18"> | **Milla** | Security / Auth | `sonnet` |
-| | **Critic** | Deliberation Critic | `opus` |
-| | **Noah** | Synthesis Verifier | `sonnet` |
-| | **Jun** | Performance / Optimization | `sonnet` |
-| <img src="images/kain.svg" width="18"> | **Kain** | Code Intelligence | `sonnet` |
-
-### Frontend
-
-| | Name | Role | Model |
-|:---:|------|------|:-----:|
-| <img src="images/derek.svg" width="18"> | **Derek** | Screen Build | `sonnet` |
-| <img src="images/rowan.svg" width="18"> | **Rowan** | Motion / Interaction | `sonnet` |
-
-</td>
-</tr>
-<tr>
-<td colspan="2">
-
-### AI / ML
-
-| | Name | Role | Model |
-|:---:|------|------|:-----:|
-| | **Jo** | AI Implementation Senior | `sonnet` |
-| | **Hugg** | AI Model Research Senior | `sonnet` |
-
-### Special
-
-| | Name | Role | Model |
-|:---:|------|------|:-----:|
-| <img src="images/iron.svg" width="18"> | **Iron** | Wizard -- guided magic for non-developers | `sonnet` |
-| | **Teacher** | Socratic teaching -- learns by questioning | `sonnet` |
-
-</td>
-</tr>
-</table>
-
----
-
-<h2 id="why">Why dk-harness</h2>
-
-**21 agents, 41 skills, 60 browse commands, 1,098 tests, DKH-DR Consensus Planning.**
-
-| Feature | Spec |
-|:--------|:-----|
-| Named Agents | **21** (role, personality, model tier) |
-| Skills | **41** (debug, review, ship, TDD, perf, CSO, harness, ai-pipeline...) |
-| Browse Commands | **60** (MCP Playwright) |
-| PDCA Lifecycle | **auto-scaling** (complexity 0-15) |
-| Cost Intelligence | **budget + ceiling + model router** |
-| Self-Healing | **circuit breaker + retry + rollback** |
-| Multi-AI Consensus | **3-voice voting** (Claude + Codex + Gemini) |
-| Evidence Chain | **6-type mandatory proof** |
-| Design System | **5 modules** (token/compare/iterate/evolve/gallery) |
-| Ship Pipeline | **11 steps** (test → review → version → PR) |
-| Tests | **1,098** pass |
-| Eval System | **10 E2E suites** |
-| Runtime Deps | **1** (ast-grep) |
-| Hook Response | **5ms** |
-
-> 상세: [docs/WHY-DK-HARNESS.md](docs/WHY-DK-HARNESS.md)
-
----
-
-<h2 id="quick-start">Quick Start</h2>
+- 🧠 **역할 기반 팀** — 작업을 보고 알맞은 에이전트(설계/구현/보안/리뷰)를 자동 편성
+- 📋 **합의형 계획 (DKH-DR)** — 여러 관점이 심의·투표로 계획을 수렴
+- 🔒 **증거 강제** — 테스트·빌드 결과 없이는 "완료"를 인정하지 않음
+- ♻️ **자가 치유** — 서킷 브레이커 · 재시도 · 롤백 내장
+- 🎬 **3D 오피스** — 에이전트가 일하는 모습을 실시간으로 관전 ([라이브](https://office-black-zeta.vercel.app))
 
 자연어로 말하면 됩니다. 명령어를 외울 필요 없어요.
 
@@ -123,111 +35,151 @@
 로그인 기능 만들어줘
 ```
 
-또는 `/dk-harness do "로그인 기능 만들어줘"`
+---
+
+## 설치
+
+```
+/plugin marketplace add burlesquer/deekee-dev-harness
+/plugin install dk-harness
+```
+
+업데이트:
+
+```
+claude plugin update dk-harness@dk-harness-marketplace
+```
+
+> **요구사항** — Claude Code v2.1.69+ · Node.js v22+
+
+---
+
+## 에이전트 팀 (21명)
+
+각 에이전트는 고유한 역할 · 성격 · 모델 티어를 가집니다.
+
+#### 리더십 · 심의
+
+| 에이전트 | 역할 | 모델 |
+|---|---|:---:|
+| **Simon** | CEO / 제품 전략 | `opus` |
+| **Sam** | CTO / 리드 | `opus` |
+| **Able** | PM / 기획 | `opus` |
+| **Klay** | 아키텍트 / 탐색 | `opus` |
+| **Ryan** | 심의 퍼실리테이터 | `opus` |
+| **Critic** | 심의 비평가 | `opus` |
+| **Noah** | 종합 검증가 | `sonnet` |
+
+#### 백엔드 · 인프라
+
+| 에이전트 | 역할 | 모델 |
+|---|---|:---:|
+| **Jay** | API 개발 | `sonnet` |
+| **Jerry** | DB / 인프라 | `sonnet` |
+| **Milla** | 보안 / 인증 | `sonnet` |
+| **Jun** | 성능 / 최적화 | `sonnet` |
+| **Kain** | 코드 인텔리전스 | `sonnet` |
+
+#### 프론트엔드 · 디자인
+
+| 에이전트 | 역할 | 모델 |
+|---|---|:---:|
+| **Willji** | UI/UX 디자인 | `sonnet` |
+| **Derek** | 화면 구현 | `sonnet` |
+| **Rowan** | 모션 / 인터랙션 | `sonnet` |
+| **figma-reader** | Figma 디자인 해석 | `sonnet` |
+
+#### AI/ML · 특수
+
+| 에이전트 | 역할 | 모델 |
+|---|---|:---:|
+| **Jo** | AI 구현 시니어 | `sonnet` |
+| **Hugg** | AI 모델 리서치 시니어 | `sonnet` |
+| **Iron** | 마법사 — 비개발자용 가이드 | `sonnet` |
+| **Teacher** | 소크라테스식 학습 | `sonnet` |
+| **progress-checker** | 진행/품질 게이트 검증 | `sonnet` |
+
+---
+
+## 시작하기
+
+명령어를 외울 필요 없이 자연어로 말하거나, 상황별 단축 명령을 쓸 수 있습니다.
 
 | 상황 | 명령어 |
-|:-----|:------|
+|---|---|
 | 간단한 수정 | `/dk-harness do "설명"` |
 | 새 기능 | `/dk-harness auto 기능명 "설명"` |
-| 버그 | `/dk-harness debug "증상"` 또는 `/dk-harness investigate` |
+| 버그 추적 | `/dk-harness debug "증상"` · `/dk-harness investigate` |
 | 코드 리뷰 | `/dk-harness review-pipeline` |
 | 보안 감사 | `/dk-harness review cso` |
 | 하네스 설계 | `/dk-harness harness "리서치 팀 만들어"` |
-| PR + 배포 | `/dk-harness ship` → `/dk-harness land-and-deploy` |
-| 교육/학습 | `/dk-harness teacher "배우고 싶은 기능"` |
-| 디자인 시스템 | `/dk-harness design-consultation` |
-| AI 파이프라인 | `/dk-harness ai-pipeline "감성 분석 모델 브라우저 실행"` |
+| AI 파이프라인 | `/dk-harness ai-pipeline "감성 분석 모델"` |
 | 성능 분석 | `/dk-harness perf runtime` |
-| 실수 복구 | `/dk-harness rollback` |
+| PR + 배포 | `/dk-harness ship` → `/dk-harness land-and-deploy` |
+| 학습 모드 | `/dk-harness teacher "배우고 싶은 기능"` |
 | 비개발자 | `/dk-harness wizard` |
+| 실수 복구 | `/dk-harness rollback` |
 
-> 전체 명령어: [docs/COMMANDS.md](docs/COMMANDS.md) · 초보자 가이드: [docs/USER-GUIDE.md](docs/USER-GUIDE.md)
+> 전체 명령어 — [docs/COMMANDS.md](docs/COMMANDS.md) · 초보자 가이드 — [docs/USER-GUIDE.md](docs/USER-GUIDE.md)
 
 ---
 
-### 새로워진 dk-harness: Teacher 모드 🧑‍🏫
+## 3D 오피스 — 에이전트 관전
 
-단순히 코드를 짜주는 것을 넘어, **함께 만들며 배우는** AI 교육 엔진이 탑재되었습니다.
+하네스가 **엔진**이라면, office는 그 **화면**입니다.
 
-- **개념 분해**: 구현하려는 기능을 단계별 개념으로 쪼개어 설명합니다 (`ast-grep` 기반 분석).
-- **소크라테스식 질문**: 코드를 바로 짜지 않고, 사용자의 이해를 돕기 위한 질문을 먼저 던집니다.
-- **학습 추적**: 세션이 바뀌어도 사용자가 어디까지 배웠는지 기억하고 다음 단계로 안내합니다.
+에이전트가 작업할 때마다 훅이 이벤트를 중계(relay)하고, 브라우저의 3D 오피스에 **캐릭터로 등장**해 실시간으로 움직입니다. 코드를 짜는 곳이 아니라, 팀이 일하는 모습을 지켜보는 관제 화면이에요.
 
-```bash
-/dk-harness teacher "React에서 무한 스크롤 구현하기"
-/dk-harness teacher "Redux Toolkit 패턴 배우기"
-/dk-harness teacher status # 내 학습 현황 확인
+🔗 **라이브** — https://office-black-zeta.vercel.app
+
+```
+dk-harness (엔진)          office (화면)
+에이전트가 "일한다"   →     그 일을 "보여준다"
+오케스트레이션              실시간 3D 시각화
 ```
 
----
+- Next.js 16 · React Three Fiber 기반
+- Claude Code 훅이 세션 시작 시 자동 연동 (별도 설치 불필요)
+- 룸 코드(`DK-XXXX`)로 입장·공유, 핵심 10인 로스터가 오피스에 등장
 
-### 24 Innovations
-
-| # | Innovation | What it solves |
-|:-:|-----------|---------------|
-| 1 | **Context Budget** | Token consumption tracking per hook |
-| 2 | **Cross-Session Learning** | Pattern reuse with confidence decay |
-| 3 | **Adaptive Routing** | Complexity → haiku/sonnet/opus |
-| 4 | **Evidence Chain** | No evidence, no "done" |
-| 5 | **Self-Healing** | Circuit breaker + recovery + rollback |
-| 6 | **4-Tier Review** | CEO/Eng/Design/Outside Voice |
-| 7 | **Ship Workflow** | 7-step automated pipeline |
-| 8 | **CSO Audit** | 14-phase OWASP + STRIDE |
-| 9 | **AI Slop Detection** | 10 anti-patterns + 7 litmus |
-| 10 | **Multi-AI Consensus** | 3-voice voting with sovereignty |
-| 11 | **PDCA Auto-Scaling** | Complexity → iteration limits |
-| 12 | **Prompt Injection Guard** | 7 patterns + XML trust boundary |
-| 13 | **Design System Engine** | Token gen/compare/iterate/evolve/gallery |
-| 14 | **Teacher Agent** | Socratic learning by questioning |
-| 15 | **41 Skills** | Full workflow coverage |
-| 16 | **60 Browse Commands** | MCP Playwright powered |
-| 17 | **Autoplan Engine** | 6-principle auto-decision |
-| 18 | **Confidence Decay** | 30-day decay for observed learnings |
-| 19 | **AST Grep** | Structural code search/replace via @ast-grep/napi |
-| 20 | **3-Tier Notepad** | Priority/working/manual — survives compaction |
-| 21 | **Team Heartbeat** | Worker health monitoring + phase gate verification |
-| 22 | **Learner Hook** | Auto-detect reusable command/file/error-fix patterns |
-| 23 | **Persistent Mode** | Don't-stop execution with session recovery |
-| 24 | **Production Browse Server** | Session/activity/auth/crash-recovery (1,706 LOC) |
-| 25 | **Harness Architect** | Meta-skill: auto-design + validate + gallery + simulate + evolve + compose + debug (2,523 LOC) |
-
-### Harness 4-Axis
-
-| Axis | Score | Modules |
-|------|:-----:|---------|
-| Constrain | 93 | Guardrail(7), Safety Invariants(5), Cost Ceiling, Freeze, Phase Gate |
-| Inform | 93 | Context Budget, Progress, Compaction, Telemetry, 3-Tier Notepad, Learner |
-| Verify | 95 | Evidence Chain, LLM Judge(7), Review(4-tier), QA Health, 1,712 Tests, 10 E2E Suites |
-| Correct | 92 | Circuit Breaker, Retry, Recovery, Rollback, Persistent Mode, Heartbeat |
+> 소스 — [`office/`](office/)
 
 ---
 
-<h2 id="performance">Performance</h2>
+## 핵심 기능
 
-| Metric | Result |
-|--------|--------|
-| Hook response | **5ms** |
-| Test suite | **1,098 cases / 255 suites** (node:test + E2E + eval) |
-| Runtime deps | **1** (@ast-grep/napi) |
-| Modules | **149+** (~38.5K LOC) |
-| Hook events | **10** (7 → +Subagent/Compact) |
-| Browse commands | **60** |
-| Skills | **41** |
-| Agents | **18** |
-| Design system | **1,200+ LOC** (5 modules) |
-| Browse server | **1,706 LOC** (production grade) |
-
-## Requirements
-
-- Claude Code v2.1.69+
-- Node.js v22+
-
-## License
-
-Apache-2.0
+| | |
+|---|---|
+| **합의형 계획 (DKH-DR)** | 다관점 심의 + 투표로 계획 수렴 |
+| **증거 체인** | 6종 증거 — 증거 없으면 "완료" 없음 |
+| **적응형 라우팅** | 복잡도(0–15) → haiku / sonnet / opus 자동 선택 |
+| **비용 인텔리전스** | 예산 + 상한 + 모델 라우터 |
+| **자가 치유** | 서킷 브레이커 + 재시도 + 복구 + 롤백 |
+| **4단계 리뷰** | CEO / Eng / Design / Outside Voice |
+| **CSO 보안 감사** | OWASP + STRIDE 다단계 |
+| **AI Slop 탐지** | 안티패턴 + 리트머스 검사 |
+| **멀티 AI 합의** | Claude + Codex + Gemini 3-보이스 투표 |
+| **디자인 시스템 엔진** | 토큰 생성/비교/반복/진화/갤러리 |
+| **Teacher 모드** | 소크라테스식 질문으로 함께 배우기 |
+| **3-Tier Notepad** | 컴팩션을 견디는 우선순위 메모 |
 
 ---
 
-<p align="center">
-  <sub>Built by <a href="https://github.com/burlesquer">deekee</a></sub>
-</p>
+## 스펙
+
+| 항목 | 값 |
+|---|---|
+| 버전 | **2.9.21** |
+| 에이전트 | **21명** (역할 · 성격 · 모델 티어) |
+| 스킬 | **45개** |
+| 혁신 모듈 | **33** |
+| 테스트 | **1,454** passing |
+| 훅 응답 | **~5ms** |
+| 런타임 의존성 | **1** (`@ast-grep/napi`) |
+| 라이선스 | **Apache-2.0** |
+
+---
+
+<div align="center">
+<sub>Built by <a href="https://github.com/burlesquer">deekee</a> · <a href="https://office-black-zeta.vercel.app">Agent Office</a></sub>
+</div>
