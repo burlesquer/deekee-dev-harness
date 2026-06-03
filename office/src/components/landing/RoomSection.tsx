@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CreateRoomModal } from './CreateRoomModal';
+import { RoomManager } from './RoomManager';
 
 export interface RoomInfo {
   readonly id: string;
@@ -136,6 +137,9 @@ export function RoomSection({ onEntering }: Readonly<RoomSectionProps>) {
       >
         + 룸 만들기
       </button>
+
+      {/* My Rooms (관리: 입장/삭제) — 내 룸이 있을 때만 노출 */}
+      <RoomManager />
 
       {/* Public Room List */}
       <section aria-label="공개 룸 목록">

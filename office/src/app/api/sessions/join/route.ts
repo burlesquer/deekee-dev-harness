@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     const normalized = rawCode.toUpperCase().trim();
-    const invite = inviteRegistry.use(normalized);
+    const invite = await inviteRegistry.use(normalized);
 
     if (!invite) {
       return NextResponse.json(

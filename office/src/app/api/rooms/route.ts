@@ -11,10 +11,14 @@ export async function GET(req: NextRequest) {
     const sp = await Promise.resolve(searchParams);
     const publicOnly = sp.get('public') === 'true';
     const userId = sp.get('userId');
+    const ownerId = sp.get('ownerId');
 
     let rooms = await roomRegistry.getAll();
 
-    if (publicOnly) {
+    if (ownerId) {
+      // 내 룸 관리용: 내가 소유한(생성한) 룸만 반환
+      rooms = rooms.filter((r) => r.ownerId === ownerId);
+    } else if (publicOnly) {
       rooms = await roomRegistry.getPublicRooms();
     } else if (userId) {
       const publicRooms = await roomRegistry.getPublicRooms();

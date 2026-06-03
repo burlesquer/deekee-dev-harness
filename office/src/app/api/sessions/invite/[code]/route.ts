@@ -8,7 +8,7 @@ export async function GET(
 ) {
   const { code } = await params;
   const normalized = code.toUpperCase().trim();
-  const invite = inviteRegistry.validate(normalized);
+  const invite = await inviteRegistry.validate(normalized);
 
   if (!invite) {
     // 만료 여부 판별: invites 내부에 만료된 코드가 있는지 확인

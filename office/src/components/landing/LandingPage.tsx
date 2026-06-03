@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { InviteCodeInput } from './InviteCodeInput';
+import { InviteCodeIssuer } from './InviteCodeIssuer';
 import { RoomSection } from './RoomSection';
 import { AGENT_CONFIG, AGENT_GROUPS, AGENT_SCREEN_COLORS } from '@/lib/colors';
 
@@ -133,6 +134,17 @@ export function LandingPage({ initialCode }: Readonly<LandingPageProps>) {
                   <p className="m-0 text-center text-xs text-office-dim">
                     형식: XXXX-XXXX &nbsp;|&nbsp; 예: IRON-7K2X
                   </p>
+
+                  {/* 구분선 — 입장 / 발급 */}
+                  <div className="flex w-full max-w-lg items-center gap-3 py-1">
+                    <span className="h-px flex-1 bg-office-border" />
+                    <span className="text-[11px] uppercase tracking-wider text-office-dim">
+                      또는 새 초대 코드 발급
+                    </span>
+                    <span className="h-px flex-1 bg-office-border" />
+                  </div>
+
+                  <InviteCodeIssuer />
                 </div>
               )}
             </div>
