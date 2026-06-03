@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
+import Link from 'next/link';
 import { InviteCodeInput } from './InviteCodeInput';
 import { RoomSection } from './RoomSection';
 import { AGENT_CONFIG, AGENT_SCREEN_COLORS } from '@/lib/colors';
@@ -12,116 +12,146 @@ export interface LandingPageProps {
 
 type ActiveTab = 'invite' | 'room';
 
+const GITHUB_URL = 'https://github.com/burlesquer/deekee-dev-harness';
+
+/** 히어로 아래 노출할 핵심 가치 4종 (README 출처). */
+const HIGHLIGHTS: readonly { readonly title: string; readonly desc: string }[] = [
+  { title: '역할 기반 팀', desc: '작업을 보고 알맞은 에이전트를 자동 편성' },
+  { title: '합의형 계획', desc: '다관점 심의 + 투표로 계획 수렴' },
+  { title: '증거 강제', desc: '테스트·빌드 없이는 "완료" 없음' },
+  { title: '실시간 3D 관전', desc: '팀이 일하는 모습을 화면으로' },
+];
+
 export function LandingPage({ initialCode }: Readonly<LandingPageProps>) {
   // 룸 입장이 즉시 사용 가능한 기본 흐름이라 기본 탭으로 둔다.
   // (초대 코드는 ?code/?session 으로 진입한 경우에만 기본 노출)
   const [activeTab, setActiveTab] = useState<ActiveTab>(initialCode ? 'invite' : 'room');
 
   return (
-    <div className="min-h-screen bg-office-bg flex flex-col items-center justify-center px-6 py-10 font-sans text-office-text">
-      {/* === Header === */}
-      <header className="text-center mb-12">
-        <div className="inline-block bg-dk-harness-orange px-4 py-1 rounded-full mb-5">
-          <span className="text-xs font-semibold text-white tracking-widest uppercase">
-            dk-harness v2.2.3
-          </span>
-        </div>
+    // body 전역 overflow:hidden 이라 랜딩은 자체 스크롤 컨테이너로 감싼다.
+    <div className="h-screen overflow-y-auto bg-office-bg font-sans text-office-text">
+      <div className="mx-auto flex max-w-2xl flex-col items-center px-6 py-14">
+        {/* === Hero === */}
+        <header className="text-center">
+          <div className="mb-5 inline-block rounded-full bg-dk-harness-orange px-4 py-1">
+            <span className="text-xs font-semibold uppercase tracking-widest text-white">
+              dk-harness v2.9.21
+            </span>
+          </div>
 
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-office-text tracking-tight mb-3">
-          dk-harness{' '}
-          <span className="text-dk-harness-orange">Agent</span>
-          {' '}Office
-        </h1>
+          <h1 className="mb-3 text-4xl font-extrabold tracking-tight text-office-text sm:text-5xl">
+            dk-harness <span className="text-dk-harness-orange">Agent</span> Office
+          </h1>
 
-        <p className="text-sm text-office-muted">
-          21명의 에이전트가 일하는 3D 오피스
-        </p>
-      </header>
+          <p className="mx-auto mb-7 max-w-md text-sm leading-relaxed text-office-muted sm:text-base">
+            Claude Code를 21명의 에이전트 팀으로. 팀이 일하는 모습을 이 3D 오피스에서 실시간으로 관전하세요.
+          </p>
 
-      {/* === Agent Avatars === */}
-      <div className="mb-10 w-full max-w-xl">
-        <div className="flex flex-wrap justify-center gap-3">
-          {AGENT_CONFIG.map((agent) => (
-            <AgentAvatar key={agent.id} id={agent.id} name={agent.name} />
+          {/* CTA — 매뉴얼 2종 + GitHub */}
+          <div className="mb-2 flex flex-wrap items-center justify-center gap-2.5">
+            <Link
+              href="/guide"
+              className="rounded-lg bg-dk-harness-orange px-4 py-2.5 text-sm font-bold text-white no-underline transition-colors duration-150 hover:bg-dk-harness-orange-hover"
+            >
+              harness 사용법
+            </Link>
+            <Link
+              href="/guide/dashboard"
+              className="rounded-lg border border-office-border px-4 py-2.5 text-sm font-bold text-office-text no-underline transition-colors duration-150 hover:border-dk-harness-orange"
+            >
+              3D 대시보드 사용법
+            </Link>
+            <a
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-lg border border-office-border px-4 py-2.5 text-sm font-bold text-office-text no-underline transition-colors duration-150 hover:border-dk-harness-orange"
+            >
+              GitHub
+            </a>
+          </div>
+        </header>
+
+        {/* === Highlights === */}
+        <div className="mb-11 mt-9 grid w-full grid-cols-2 gap-2.5 sm:grid-cols-4">
+          {HIGHLIGHTS.map((h) => (
+            <div key={h.title} className="rounded-xl border border-office-border bg-office-surface px-3 py-3 text-center">
+              <div className="text-xs font-bold text-office-text">{h.title}</div>
+              <div className="mt-1 text-[11px] leading-snug text-office-dim">{h.desc}</div>
+            </div>
           ))}
         </div>
+
+        {/* === Agent Avatars (21명) === */}
+        <div className="mb-10 w-full">
+          <div className="flex flex-wrap justify-center gap-3">
+            {AGENT_CONFIG.map((agent) => (
+              <AgentAvatar key={agent.id} id={agent.id} name={agent.name} />
+            ))}
+          </div>
+        </div>
+
+        {/* === Entry card (룸/초대) === */}
+        <main className="w-full overflow-hidden rounded-2xl border border-office-border bg-office-surface shadow-lg shadow-dk-harness-orange/5">
+          {/* Tab bar */}
+          <div className="flex border-b border-office-border" role="tablist" aria-label="입장 방식 선택">
+            <TabButton
+              label="초대 코드"
+              active={activeTab === 'invite'}
+              onClick={() => setActiveTab('invite')}
+              id="tab-invite"
+              panelId="panel-invite"
+            />
+            <TabButton
+              label="룸 입장"
+              active={activeTab === 'room'}
+              onClick={() => setActiveTab('room')}
+              id="tab-room"
+              panelId="panel-room"
+            />
+          </div>
+
+          {/* Tab panels */}
+          <div className="px-8 pb-9 pt-7">
+            <div id="panel-invite" role="tabpanel" aria-labelledby="tab-invite" hidden={activeTab !== 'invite'}>
+              {activeTab === 'invite' && (
+                <div className="flex flex-col items-center gap-5">
+                  <p className="m-0 text-xs tracking-wider text-office-muted">
+                    팀원에게 받은 초대 코드를 입력하세요
+                  </p>
+                  <InviteCodeInput initialCode={initialCode} />
+                  <p className="m-0 text-center text-xs text-office-dim">
+                    형식: XXXX-XXXX &nbsp;|&nbsp; 예: IRON-7K2X
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div id="panel-room" role="tabpanel" aria-labelledby="tab-room" hidden={activeTab !== 'room'}>
+              {activeTab === 'room' && <RoomSection />}
+            </div>
+          </div>
+        </main>
+
+        {/* === Footer === */}
+        <footer className="mt-12 w-full max-w-sm text-center">
+          <p className="mb-4 text-sm text-office-muted">에이전트는 어떻게 등장하나요?</p>
+          <div className="rounded-xl border border-office-border bg-office-elevated px-6 py-4 text-left">
+            <p className="mb-2 text-xs uppercase tracking-widest text-office-muted">자동 연동</p>
+            <p className="text-xs leading-relaxed text-office-dim">
+              dk-harness 훅이 설정된 Claude Code 세션을 시작하면, 에이전트가 이 오피스에 자동으로
+              등장합니다. 위에서 룸을 만들거나 코드로 입장한 뒤 세션을 실행해 보세요.
+            </p>
+          </div>
+          <p className="mt-3 text-xs text-office-dim">
+            자세한 흐름은{' '}
+            <Link href="/guide/dashboard" className="text-dk-harness-orange no-underline hover:underline">
+              3D 대시보드 사용법
+            </Link>
+            에서 확인하세요.
+          </p>
+        </footer>
       </div>
-
-      {/* === Main card === */}
-      <main className="w-full max-w-xl bg-office-surface border border-office-border rounded-2xl shadow-lg shadow-dk-harness-orange/5 overflow-hidden">
-        {/* Tab bar */}
-        <div
-          className="flex border-b border-office-border"
-          role="tablist"
-          aria-label="입장 방식 선택"
-        >
-          <TabButton
-            label="초대 코드"
-            active={activeTab === 'invite'}
-            onClick={() => setActiveTab('invite')}
-            id="tab-invite"
-            panelId="panel-invite"
-          />
-          <TabButton
-            label="룸 입장"
-            active={activeTab === 'room'}
-            onClick={() => setActiveTab('room')}
-            id="tab-room"
-            panelId="panel-room"
-          />
-        </div>
-
-        {/* Tab panels */}
-        <div className="px-8 pt-7 pb-9">
-          <div
-            id="panel-invite"
-            role="tabpanel"
-            aria-labelledby="tab-invite"
-            hidden={activeTab !== 'invite'}
-          >
-            {activeTab === 'invite' && (
-              <div className="flex flex-col items-center gap-5">
-                <p className="text-xs text-office-muted tracking-wider m-0">
-                  팀원에게 받은 초대 코드를 입력하세요
-                </p>
-                <InviteCodeInput initialCode={initialCode} />
-                <p className="text-xs text-office-dim text-center m-0">
-                  형식: XXXX-XXXX &nbsp;|&nbsp; 예: IRON-7K2X
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div
-            id="panel-room"
-            role="tabpanel"
-            aria-labelledby="tab-room"
-            hidden={activeTab !== 'room'}
-          >
-            {activeTab === 'room' && <RoomSection />}
-          </div>
-        </div>
-      </main>
-
-      {/* === Footer === */}
-      <footer className="mt-12 text-center w-full max-w-sm">
-        <p className="text-sm text-office-muted mb-4">
-          에이전트는 어떻게 등장하나요?
-        </p>
-        <div className="bg-office-elevated rounded-xl px-6 py-4 border border-office-border text-left">
-          <p className="text-xs text-office-muted uppercase tracking-widest mb-2">
-            자동 연동
-          </p>
-          <p className="text-xs text-office-dim leading-relaxed">
-            dk-harness 훅이 설정된 Claude Code 세션을 시작하면, 에이전트가
-            이 오피스에 자동으로 등장합니다. 위에서 룸을 만들거나 코드로 입장한 뒤
-            세션을 실행해 보세요.
-          </p>
-        </div>
-        <p className="text-xs text-office-dim mt-3">
-          초대 코드는 다른 사람의 세션에 참여할 때만 사용합니다.
-        </p>
-      </footer>
     </div>
   );
 }
@@ -137,14 +167,14 @@ function AgentAvatar({ id, name }: Readonly<AgentAvatarProps>) {
   const screenColor = AGENT_SCREEN_COLORS[id] ?? '#FF6B2C';
 
   return (
-    <div className="flex flex-col items-center gap-1.5 group" title={name}>
+    <div className="group flex flex-col items-center gap-1.5" title={name}>
       <div
-        className="w-10 h-10 rounded-xl bg-office-elevated border border-office-border flex items-center justify-center overflow-hidden transition-all duration-150 group-hover:border-dk-harness-orange group-hover:scale-110"
+        className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-office-border bg-office-elevated transition-all duration-150 group-hover:scale-110 group-hover:border-dk-harness-orange"
         aria-label={`${name} 에이전트`}
       >
         <AgentSvgIcon id={id} color={screenColor} />
       </div>
-      <span className="text-xs text-office-dim group-hover:text-office-text transition-colors duration-150">
+      <span className="text-xs text-office-dim transition-colors duration-150 group-hover:text-office-text">
         {name}
       </span>
     </div>
@@ -211,10 +241,10 @@ function TabButton({ label, active, onClick, id, panelId }: Readonly<TabButtonPr
       aria-controls={panelId}
       onClick={onClick}
       className={[
-        'flex-1 h-12 bg-transparent border-none text-sm font-sans cursor-pointer transition-all duration-150',
+        'h-12 flex-1 cursor-pointer border-none bg-transparent font-sans text-sm transition-all duration-150',
         active
-          ? 'text-dk-harness-orange border-b-2 border-dk-harness-orange font-semibold'
-          : 'text-office-dim border-b-2 border-transparent font-normal hover:text-office-text',
+          ? 'border-b-2 border-dk-harness-orange font-semibold text-dk-harness-orange'
+          : 'border-b-2 border-transparent font-normal text-office-dim hover:text-office-text',
       ].join(' ')}
     >
       {label}
