@@ -22,21 +22,23 @@ export default function OfficeCanvas() {
 
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
-      {/* 컨트롤 버튼들 */}
-      <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10, display: 'flex', gap: 8 }}>
-        <button
-          onClick={() => setDebugMode((v) => !v)}
-          className="cursor-pointer border border-dk-harness-orange/20 bg-white/80 px-2.5 py-1 font-mono text-xs text-dk-harness-orange backdrop-blur-sm hover:bg-dk-harness-light"
-        >
-          {debugMode ? '▶ Full Scene' : '⬛ Debug'}
-        </button>
-        <button
-          onClick={() => setShowGrid((v) => !v)}
-          className="cursor-pointer border border-dk-harness-orange/20 bg-white/80 px-2.5 py-1 font-mono text-xs text-dk-harness-orange backdrop-blur-sm hover:bg-dk-harness-light"
-        >
-          {showGrid ? 'Grid OFF' : 'Grid ON'}
-        </button>
-      </div>
+      {/* 컨트롤 버튼들 — 개발용 진단(빈 테스트씬 토글·바닥 격자). prod 에선 숨긴다. */}
+      {process.env.NODE_ENV !== 'production' && (
+        <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10, display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => setDebugMode((v) => !v)}
+            className="cursor-pointer border border-dk-harness-orange/20 bg-white/80 px-2.5 py-1 font-mono text-xs text-dk-harness-orange backdrop-blur-sm hover:bg-dk-harness-light"
+          >
+            {debugMode ? '▶ Full Scene' : '⬛ Debug'}
+          </button>
+          <button
+            onClick={() => setShowGrid((v) => !v)}
+            className="cursor-pointer border border-dk-harness-orange/20 bg-white/80 px-2.5 py-1 font-mono text-xs text-dk-harness-orange backdrop-blur-sm hover:bg-dk-harness-light"
+          >
+            {showGrid ? 'Grid OFF' : 'Grid ON'}
+          </button>
+        </div>
+      )}
 
       <Canvas
         camera={{ position: [0, 15, 18], fov: 40 }}
