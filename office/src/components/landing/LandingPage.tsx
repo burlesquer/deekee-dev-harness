@@ -13,7 +13,9 @@ export interface LandingPageProps {
 type ActiveTab = 'invite' | 'room';
 
 export function LandingPage({ initialCode }: Readonly<LandingPageProps>) {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('invite');
+  // 룸 입장이 즉시 사용 가능한 기본 흐름이라 기본 탭으로 둔다.
+  // (초대 코드는 ?code/?session 으로 진입한 경우에만 기본 노출)
+  const [activeTab, setActiveTab] = useState<ActiveTab>(initialCode ? 'invite' : 'room');
 
   return (
     <div className="min-h-screen bg-office-bg flex flex-col items-center justify-center px-6 py-10 font-sans text-office-text">
@@ -104,18 +106,20 @@ export function LandingPage({ initialCode }: Readonly<LandingPageProps>) {
       {/* === Footer === */}
       <footer className="mt-12 text-center w-full max-w-sm">
         <p className="text-sm text-office-muted mb-4">
-          또는 새 오피스 만들기
+          에이전트는 어떻게 등장하나요?
         </p>
-        <div className="bg-office-elevated rounded-xl px-6 py-4 border border-office-border">
+        <div className="bg-office-elevated rounded-xl px-6 py-4 border border-office-border text-left">
           <p className="text-xs text-office-muted uppercase tracking-widest mb-2">
-            agent-ui CLI
+            자동 연동
           </p>
-          <code className="block text-sm text-dk-harness-orange font-mono">
-            npx dk-harness-office --setup
-          </code>
+          <p className="text-xs text-office-dim leading-relaxed">
+            dk-harness 훅이 설정된 Claude Code 세션을 시작하면, 에이전트가
+            이 오피스에 자동으로 등장합니다. 위에서 룸을 만들거나 코드로 입장한 뒤
+            세션을 실행해 보세요.
+          </p>
         </div>
         <p className="text-xs text-office-dim mt-3">
-          CLI 실행 후 생성되는 초대 코드를 위에 입력하세요
+          초대 코드는 다른 사람의 세션에 참여할 때만 사용합니다.
         </p>
       </footer>
     </div>
