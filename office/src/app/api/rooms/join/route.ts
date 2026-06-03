@@ -39,12 +39,12 @@ export async function POST(req: NextRequest) {
     let room = null;
 
     if (body.code) {
-      room = roomRegistry.join(body.code, member);
+      room = await roomRegistry.join(body.code, member);
       if (!room) {
         return NextResponse.json({ error: 'Invalid room code or room is full' }, { status: 404 });
       }
     } else if (body.roomId) {
-      const found = roomRegistry.getById(body.roomId);
+      const found = await roomRegistry.getById(body.roomId);
       if (!found) {
         return NextResponse.json({ error: 'Room not found' }, { status: 404 });
       }
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
           { status: 403 },
         );
       }
-      room = roomRegistry.joinById(body.roomId, member);
+      room = await roomRegistry.joinById(body.roomId, member);
       if (!room) {
         return NextResponse.json({ error: 'Room is full' }, { status: 409 });
       }

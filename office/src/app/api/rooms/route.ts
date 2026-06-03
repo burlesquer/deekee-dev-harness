@@ -12,13 +12,13 @@ export async function GET(req: NextRequest) {
     const publicOnly = sp.get('public') === 'true';
     const userId = sp.get('userId');
 
-    let rooms = roomRegistry.getAll();
+    let rooms = await roomRegistry.getAll();
 
     if (publicOnly) {
-      rooms = roomRegistry.getPublicRooms();
+      rooms = await roomRegistry.getPublicRooms();
     } else if (userId) {
-      const publicRooms = roomRegistry.getPublicRooms();
-      const myRooms = roomRegistry.getByUserId(userId);
+      const publicRooms = await roomRegistry.getPublicRooms();
+      const myRooms = await roomRegistry.getByUserId(userId);
       // Merge deduped
       const seen = new Set<string>();
       rooms = [...publicRooms, ...myRooms].filter((r) => {
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'maxMembers must be between 1 and 50' }, { status: 400 });
     }
 
-    const room = roomRegistry.create(
+    const room = await roomRegistry.create(
       body.name,
       body.ownerId,
       body.teamId ?? '',

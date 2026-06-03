@@ -9,7 +9,7 @@ export async function GET(
 ) {
   try {
     const { code } = await params;
-    const room = roomRegistry.getByCode(code.toUpperCase());
+    const room = await roomRegistry.getByCode(code.toUpperCase());
     if (!room) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }

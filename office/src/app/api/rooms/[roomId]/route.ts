@@ -9,7 +9,7 @@ export async function GET(
 ) {
   try {
     const { roomId } = await params;
-    const room = roomRegistry.getById(roomId);
+    const room = await roomRegistry.getById(roomId);
     if (!room) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
@@ -28,7 +28,7 @@ export async function DELETE(
 ) {
   try {
     const { roomId } = await params;
-    const room = roomRegistry.getById(roomId);
+    const room = await roomRegistry.getById(roomId);
     if (!room) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
@@ -38,7 +38,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden: only the room owner can delete this room' }, { status: 403 });
     }
 
-    roomRegistry.delete(roomId);
+    await roomRegistry.delete(roomId);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[rooms/[roomId] DELETE]', err);

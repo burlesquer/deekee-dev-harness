@@ -14,12 +14,12 @@ export async function POST(
       return NextResponse.json({ error: 'Missing required field: sessionId' }, { status: 400 });
     }
 
-    const room = roomRegistry.getById(roomId);
+    const room = await roomRegistry.getById(roomId);
     if (!room) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
 
-    roomRegistry.leave(roomId, body.sessionId);
+    await roomRegistry.leave(roomId, body.sessionId);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[rooms/[roomId]/leave POST]', err);

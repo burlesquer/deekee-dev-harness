@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   // Build a session filter when roomId is provided
   let sessionFilter: Set<string> | null = null;
   if (roomId) {
-    const room = roomRegistry.getById(roomId);
+    const room = await roomRegistry.getById(roomId);
     if (room) {
       sessionFilter = new Set(room.members.map((m) => m.sessionId));
     } else {
