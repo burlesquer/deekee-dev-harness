@@ -1,7 +1,9 @@
 import { randomBytes } from 'crypto';
+import { kvEnabled, kvGetJSON, kvSetJSON } from './kv-store';
 
 const CLEANUP_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 const EMPTY_ROOM_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
+const KV_KEY = 'dk:rooms';
 
 export interface RoomMember {
   sessionId: string;
@@ -76,6 +78,7 @@ class RoomRegistry {
 
     this.rooms.set(id, room);
     this.codeIndex.set(code, id);
+    void this.persist();
     return room;
   }
 
@@ -103,6 +106,7 @@ class RoomRegistry {
 
     const updated: Room = { ...room, members: updatedMembers };
     this.rooms.set(roomId, updated);
+    void this.persist();
     return updated;
   }
 
@@ -116,6 +120,7 @@ class RoomRegistry {
       members: room.members.filter((m) => m.sessionId !== sessionId),
     };
     this.rooms.set(roomId, updated);
+    void this.persist();
     return updated.members.length < before;
   }
 
@@ -124,6 +129,7 @@ class RoomRegistry {
     if (!room) return false;
     this.codeIndex.delete(room.code);
     this.rooms.delete(roomId);
+    void this.persist();
     return true;
   }
 
@@ -170,6 +176,22 @@ class RoomRegistry {
     }
   }
 
+  /** Restore rooms from KV into the Map + code index (call once at startup). */
+  async hydrate(): Promise<void> {
+    const stored = await kvGetJSON<Room[]>(KV_KEY);
+    if (!stored || !Array.isArray(stored)) return;
+    for (const room of stored) {
+      this.rooms.set(room.id, room);
+      this.codeIndex.set(room.code, room.id);
+    }
+  }
+
+  /** Snapshot all rooms to KV. Fire-and-forget; errors are swallowed. */
+  persist(): void {
+    if (!kvEnabled()) return;
+    void kvSetJSON(KV_KEY, this.getAll()).catch(() => {});
+  }
+
   private generateUniqueCode(): string {
     let code = generateRoomCode();
     // Retry on collision (extremely rare with 4 hex bytes = 65536 possibilities)
@@ -186,7 +208,11 @@ const globalForRoom = globalThis as typeof globalThis & {
 };
 
 if (!globalForRoom.__roomRegistry) {
-  globalForRoom.__roomRegistry = new RoomRegistry();
+  const registry = new RoomRegistry();
+  // Restore persisted rooms before the singleton is exposed so route handlers
+  // (which import this module) see a hydrated registry on the first request.
+  if (kvEnabled()) await registry.hydrate();
+  globalForRoom.__roomRegistry = registry;
 }
 
 export const roomRegistry: RoomRegistry = globalForRoom.__roomRegistry;

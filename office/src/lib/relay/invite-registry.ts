@@ -1,7 +1,9 @@
 import { randomBytes } from 'crypto';
+import { kvEnabled, kvGetJSON, kvSetJSON } from './kv-store';
 
 const DEFAULT_EXPIRES_IN_MS = 5 * 60 * 1000; // 5 minutes
 const CLEANUP_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
+const KV_KEY = 'dk:invites';
 
 export interface InviteCode {
   code: string;       // e.g. "IRON-7K2X"
@@ -46,6 +48,7 @@ export class InviteRegistry {
     };
 
     this.invites.set(code, invite);
+    void this.persist();
     return invite;
   }
 
@@ -66,6 +69,7 @@ export class InviteRegistry {
       currentUses: invite.currentUses + 1,
     };
     this.invites.set(code, updated);
+    void this.persist();
     return updated;
   }
 
@@ -81,6 +85,7 @@ export class InviteRegistry {
   /** Directly insert a pre-built invite (used for seeding in dev/test). */
   seed(invite: InviteCode): void {
     this.invites.set(invite.code, invite);
+    void this.persist();
   }
 
   destroy(): void {
@@ -88,6 +93,21 @@ export class InviteRegistry {
       clearInterval(this.cleanupTimer);
       this.cleanupTimer = null;
     }
+  }
+
+  /** Restore invites from KV into the Map (call once at startup). */
+  async hydrate(): Promise<void> {
+    const stored = await kvGetJSON<InviteCode[]>(KV_KEY);
+    if (!stored || !Array.isArray(stored)) return;
+    for (const invite of stored) {
+      this.invites.set(invite.code, invite);
+    }
+  }
+
+  /** Snapshot all invites to KV. Fire-and-forget; errors are swallowed. */
+  persist(): void {
+    if (!kvEnabled()) return;
+    void kvSetJSON(KV_KEY, Array.from(this.invites.values())).catch(() => {});
   }
 }
 
@@ -97,7 +117,11 @@ const globalForInvite = globalThis as typeof globalThis & {
 };
 
 if (!globalForInvite.__inviteRegistry) {
-  globalForInvite.__inviteRegistry = new InviteRegistry();
+  const registry = new InviteRegistry();
+  // Restore persisted invites before the singleton is exposed so route handlers
+  // (which import this module) see a hydrated registry on the first request.
+  if (kvEnabled()) await registry.hydrate();
+  globalForInvite.__inviteRegistry = registry;
 
   // Seed a fixed demo invite code for development / local testing
   if (process.env.NODE_ENV !== 'production') {

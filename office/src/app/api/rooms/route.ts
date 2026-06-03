@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { roomRegistry } from '@/lib/relay/room-registry';
-import { validateRelaySecret } from '@/lib/relay/auth';
 
 // GET /api/rooms — list public rooms and/or rooms the user belongs to
 // query: ?public=true  → public rooms only
@@ -37,11 +36,8 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/rooms — create a new room
+// Web mutation: no RELAY_SECRET gate (browser has no login; ingest endpoints keep the gate)
 export async function POST(req: NextRequest) {
-  if (process.env.RELAY_SECRET && !validateRelaySecret(req)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   try {
     const body = (await req.json()) as {
       name?: string;

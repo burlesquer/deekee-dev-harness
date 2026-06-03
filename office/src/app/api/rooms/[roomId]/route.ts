@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { roomRegistry } from '@/lib/relay/room-registry';
-import { validateRelaySecret } from '@/lib/relay/auth';
 
 // GET /api/rooms/[roomId] — room detail + members
 // Read-only: no auth required
@@ -22,14 +21,11 @@ export async function GET(
 }
 
 // DELETE /api/rooms/[roomId] — delete room (owner only)
+// Web mutation: no RELAY_SECRET gate; ownership is enforced via x-owner-id instead
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ roomId: string }> },
 ) {
-  if (process.env.RELAY_SECRET && !validateRelaySecret(req)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   try {
     const { roomId } = await params;
     const room = roomRegistry.getById(roomId);
