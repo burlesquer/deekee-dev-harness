@@ -42,8 +42,11 @@ export async function POST(req: NextRequest) {
     // 룸 코드가 오면 해당 룸의 멤버로 합류시킨다. 이게 "PC 세션 ↔ 룸"의 다리:
     // session.roomId 가 채워지면 이후 이벤트가 룸 도장을 받고, SSE/UI 가 룸 단위로 분리한다.
     // 코드가 없거나 룸이 없으면 전역 세션으로 등록(기존 동작 유지).
+    const _debug: Record<string, unknown> = { roomCodeSeen: body.roomCode ?? null };
     if (body.roomCode) {
       const room = await roomRegistry.getByCode(body.roomCode.toUpperCase());
+      _debug.roomFound = !!room;
+      _debug.allCodes = (await roomRegistry.getAll()).map((r) => r.code);
       if (room) {
         // 합류가 성공한 경우에만 roomId 를 바인딩한다(만석이면 joinById 가 null →
         // 도장만 찍히고 실제 멤버가 아닌 불일치를 막는다).
@@ -54,6 +57,7 @@ export async function POST(req: NextRequest) {
           agentRole: session.agentRole,
           joinedAt: Date.now(),
         });
+        _debug.joined = !!joined;
         if (joined) session.roomId = room.id;
       }
     }
@@ -72,7 +76,7 @@ export async function POST(req: NextRequest) {
     };
     eventBroadcaster.broadcast(event);
 
-    return NextResponse.json({ ok: true, session }, { status: 201 });
+    return NextResponse.json({ ok: true, session, _debug }, { status: 201 });
   } catch (err) {
     console.error('[relay/register POST]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
