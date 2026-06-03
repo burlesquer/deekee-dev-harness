@@ -7,25 +7,40 @@ export interface SeatPosition {
   position: [number, number, number];
 }
 
-// 사무실 좌석 배치 (10명 에이전트)
-// 뒤쪽 벽(-Z)에 보드, 앞쪽(+Z)에 Iron 특별석
+// 사무실 좌석 배치 (21명 에이전트)
+// 뒤쪽 벽(-Z)에 보드, Sam 단독석 → 4개 행(각 5석) 그리드
+// x: -4.8 ~ 4.8 (간격 2.4), z: -7 ~ 4.5 (행 간격 ~3)
 export const SEAT_POSITIONS: SeatPosition[] = [
   // Sam — 중앙 상단 단독 데스크
-  { id: 'sam',   position: [0,   0, -5.5] },
-  // Klay, Able — 좌측 중단
-  { id: 'klay',  position: [-3,  0, -2.5] },
-  { id: 'able',  position: [-1,  0, -2.5] },
-  // Willji, Rowan — 우측 중단
-  { id: 'willji', position: [1,  0, -2.5] },
-  { id: 'rowan',  position: [3,  0, -2.5] },
-  // Jay, Jerry — 좌측 하단
-  { id: 'jay',   position: [-3,  0,  1.0] },
-  { id: 'jerry', position: [-1,  0,  1.0] },
-  // Derek, Milla — 우측 하단
-  { id: 'derek', position: [1,   0,  1.0] },
-  { id: 'milla', position: [3,   0,  1.0] },
-  // Iron — 특별석 (앞쪽 중앙)
-  { id: 'iron',  position: [0,   0,  4.5] },
+  { id: 'sam',   position: [0,    0, -7.0] },
+
+  // Row 1 — 리더십 · 심의
+  { id: 'simon',  position: [-4.8, 0, -4.0] },
+  { id: 'able',   position: [-2.4, 0, -4.0] },
+  { id: 'klay',   position: [0,    0, -4.0] },
+  { id: 'ryan',   position: [2.4,  0, -4.0] },
+  { id: 'critic', position: [4.8,  0, -4.0] },
+
+  // Row 2 — 백엔드 · 인프라
+  { id: 'jay',   position: [-4.8, 0, -1.0] },
+  { id: 'jerry', position: [-2.4, 0, -1.0] },
+  { id: 'milla', position: [0,    0, -1.0] },
+  { id: 'jun',   position: [2.4,  0, -1.0] },
+  { id: 'kain',  position: [4.8,  0, -1.0] },
+
+  // Row 3 — 프론트 · 디자인
+  { id: 'willji',       position: [-4.8, 0, 2.0] },
+  { id: 'derek',        position: [-2.4, 0, 2.0] },
+  { id: 'rowan',        position: [0,    0, 2.0] },
+  { id: 'figma-reader', position: [2.4,  0, 2.0] },
+  { id: 'noah',         position: [4.8,  0, 2.0] },
+
+  // Row 4 — AI · 특수
+  { id: 'jo',               position: [-4.8, 0, 4.5] },
+  { id: 'hugg',             position: [-2.4, 0, 4.5] },
+  { id: 'iron',             position: [0,    0, 4.5] },
+  { id: 'teacher',          position: [2.4,  0, 4.5] },
+  { id: 'progress-checker', position: [4.8,  0, 4.5] },
 ];
 
 export function OfficeLayout() {

@@ -34,7 +34,7 @@ export function LandingPage({ initialCode }: Readonly<LandingPageProps>) {
         </h1>
 
         <p className="text-sm text-office-muted">
-          10명의 에이전트가 일하는 3D 오피스
+          21명의 에이전트가 일하는 3D 오피스
         </p>
       </header>
 

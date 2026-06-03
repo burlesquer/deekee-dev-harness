@@ -44,6 +44,18 @@ export const AGENT_SCREEN_COLORS: Record<string, string> = {
   derek: '#22d3ee',   // 시안
   rowan: '#a3e635',   // 라임
   iron: '#d946ef',    // 마젠타
+  // 확장 11인 (심의·검증·AI·특수)
+  simon: '#c084fc',              // 라이트 퍼플 (CEO)
+  ryan: '#818cf8',               // 인디고
+  critic: '#f87171',             // 레드
+  noah: '#34d399',               // 에메랄드
+  jun: '#2dd4bf',                // 틸
+  kain: '#38bdf8',               // 스카이
+  jo: '#facc15',                 // 골드
+  hugg: '#fb7185',               // 로즈
+  teacher: '#fdba74',            // 라이트 오렌지
+  'figma-reader': '#f0abfc',     // 후크시아
+  'progress-checker': '#94a3b8', // 슬레이트
 } as const;
 
 // 에이전트 설정 (이름, 역할, 부서, 모델)
@@ -58,4 +70,16 @@ export const AGENT_CONFIG = [
   { id: 'derek',  name: 'Derek',  role: '화면',        dept: '프론트', model: 'sonnet' },
   { id: 'rowan',  name: 'Rowan',  role: '모션',        dept: '프론트', model: 'sonnet' },
   { id: 'iron',   name: 'Iron',   role: '마법사',      dept: '마법',   model: 'sonnet' },
+  // 확장 11인
+  { id: 'simon',  name: 'Simon',  role: 'CEO',         dept: '리더십', model: 'opus' },
+  { id: 'ryan',   name: 'Ryan',   role: '심의',        dept: '리더십', model: 'opus' },
+  { id: 'critic', name: 'Critic', role: '비평',        dept: '심의',   model: 'opus' },
+  { id: 'noah',   name: 'Noah',   role: '검증',        dept: '심의',   model: 'sonnet' },
+  { id: 'jun',    name: 'Jun',    role: '성능',        dept: '백엔드', model: 'sonnet' },
+  { id: 'kain',   name: 'Kain',   role: '코드지능',    dept: '백엔드', model: 'sonnet' },
+  { id: 'jo',     name: 'Jo',     role: 'AI구현',      dept: 'AI',     model: 'sonnet' },
+  { id: 'hugg',   name: 'Hugg',   role: 'AI리서치',    dept: 'AI',     model: 'sonnet' },
+  { id: 'teacher', name: 'Teacher', role: '학습',      dept: '특수',   model: 'sonnet' },
+  { id: 'figma-reader', name: 'Figma', role: 'Figma',  dept: '디자인', model: 'sonnet' },
+  { id: 'progress-checker', name: 'Progress', role: '진행검증', dept: '특수', model: 'sonnet' },
 ] as const;
