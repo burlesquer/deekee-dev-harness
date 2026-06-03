@@ -46,9 +46,8 @@ export function AgentCharacters() {
           (s) => s.agentName.toLowerCase() === config.id.toLowerCase(),
         );
 
-        // 실제 등록 세션이 있는 에이전트만 3D 에 등장시킨다(사이드바 멤버 목록과 일치).
-        // 세션 없는 로스터는 빈 좌석 placeholder 였는데, 관전 시 "전원 입장"처럼 오인돼 숨긴다.
-        if (!session) return null;
+        // 로스터 전원을 그리되, 실제 등록 세션이 없는 에이전트는 흐릿한 회색(offline)으로 구분.
+        const dimmed = !session;
 
         const agentState = agents.get(config.id);
         const agentStatus = agentState?.status ?? 'idle';
@@ -62,6 +61,7 @@ export function AgentCharacters() {
             role={config.role}
             screenColor={AGENT_SCREEN_COLORS[config.id]}
             agentStatus={agentStatus}
+            dimmed={dimmed}
             currentTool={session?.currentTool}
             onSelect={handleSelect}
             onHover={handleHover}

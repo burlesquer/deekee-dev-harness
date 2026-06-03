@@ -17,6 +17,8 @@ interface CharacterBillboardProps {
   role: string;
   screenColor?: string;
   agentStatus?: 'idle' | 'working' | 'reviewing' | 'blocked';
+  /** 등록 세션이 없는(미접속) 에이전트 — 흐릿한 반투명 회색으로 표시. */
+  dimmed?: boolean;
   currentTool?: string;
   onSelect?: (id: string) => void;
   onHover?: (id: string | null) => void;
@@ -87,6 +89,7 @@ export function CharacterBillboard({
   isHovered = false,
   isSelected = false,
   lastChatMessage,
+  dimmed = false,
 }: Readonly<CharacterBillboardProps>) {
   const approvals = useOfficeStore((s) => s.approvals);
   const setActiveApproval = useOfficeStore((s) => s.setActiveApproval);
@@ -192,9 +195,12 @@ export function CharacterBillboard({
       w.currentZ = meshRef.current.position.z;
       w.timer = 0;
     } else {
-      // idle/blocked: 자율 산책
+      // idle/blocked: 산책 비활성화 — 자리에서 가벼운 흔들림만(관전 시 산만함 방지).
+      // phase 를 매 프레임 'desk' 로, timer 를 0 으로 고정해 walking 전환이 절대 일어나지 않게 한다.
       const w = wanderRef.current;
       const p = PERSONALITY[agentId] || DEFAULT_PERSONALITY;
+      w.phase = 'desk' as WanderPhase; // 리터럴 좁힘 방지(아래 switch 의 다른 case 보존)
+      w.timer = 0;
       w.timer += dt;
 
       const [deskX, , deskZ] = position;
@@ -325,13 +331,16 @@ export function CharacterBillboard({
       meshRef.current.scale.set(1, 1, 1);
     }
 
-    // 페이드인 lerp
+    // 페이드인 lerp + 미접속(dimmed) 흐릿한 반투명 회색 처리
     if (materialRef.current) {
       materialRef.current.opacity = THREE.MathUtils.lerp(
         materialRef.current.opacity,
-        targetOpacity,
+        targetOpacity * (dimmed ? 0.3 : 1),
         0.05,
       );
+      // map 에 곱해지는 색 — 미접속은 회색 틴트로 죽이고, 접속은 원색.
+      const g = dimmed ? 0.55 : 1;
+      materialRef.current.color.setRGB(g, g, g);
     }
   });
 
